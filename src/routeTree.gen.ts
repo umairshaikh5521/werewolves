@@ -19,6 +19,7 @@ import { Route as DashboardRouteRouteImport } from './app/dashboard/route'
 import { Route as IndexRouteImport } from './app/index'
 import { Route as GameIndexRouteImport } from './app/game.index'
 import { Route as DashboardIndexRouteImport } from './app/dashboard/index'
+import { Route as GameGuideRouteImport } from './app/game.guide'
 import { Route as GamePlayRoomCodeRouteImport } from './app/game.play.$roomCode'
 import { Route as GameLobbyRoomCodeRouteImport } from './app/game.lobby.$roomCode'
 import { Route as GameJoinRoomCodeRouteImport } from './app/game.join.$roomCode'
@@ -80,6 +81,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const GameGuideRoute = GameGuideRouteImport.update({
+  id: '/game/guide',
+  path: '/game/guide',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GamePlayRoomCodeRoute = GamePlayRoomCodeRouteImport.update({
   id: '/game/play/$roomCode',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/hello': typeof HelloRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/game/guide': typeof GameGuideRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/game/': typeof GameIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/hello': typeof HelloRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/game/guide': typeof GameGuideRoute
   '/dashboard': typeof DashboardIndexRoute
   '/game': typeof GameIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/hello': typeof HelloRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/game/guide': typeof GameGuideRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/game/': typeof GameIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/hello'
     | '/login'
     | '/signup'
+    | '/game/guide'
     | '/dashboard/'
     | '/game/'
     | '/api/auth/$'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/hello'
     | '/login'
     | '/signup'
+    | '/game/guide'
     | '/dashboard'
     | '/game'
     | '/api/auth/$'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/hello'
     | '/login'
     | '/signup'
+    | '/game/guide'
     | '/dashboard/'
     | '/game/'
     | '/api/auth/$'
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   HelloRoute: typeof HelloRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
+  GameGuideRoute: typeof GameGuideRoute
   GameIndexRoute: typeof GameIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/game/guide': {
+      id: '/game/guide'
+      path: '/game/guide'
+      fullPath: '/game/guide'
+      preLoaderRoute: typeof GameGuideRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/game/play/$roomCode': {
       id: '/game/play/$roomCode'
@@ -473,6 +493,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelloRoute: HelloRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
+  GameGuideRoute: GameGuideRoute,
   GameIndexRoute: GameIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,

@@ -5,7 +5,7 @@ import { api } from '../../convex/_generated/api'
 import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
 import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { Input } from '@/components/ui/input'
-import { Pencil } from 'lucide-react'
+import { Pencil, BookOpen } from 'lucide-react'
 
 export const Route = createFileRoute('/game/')({ component: GameHome })
 
@@ -170,6 +170,14 @@ function GameHome() {
         <p className="text-center text-xs text-muted-foreground/60">
           5-8 players needed to start a game
         </p>
+
+        <button
+          onClick={() => navigate({ to: '/game/guide' })}
+          className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <BookOpen className="h-4 w-4" />
+          <span className="font-display font-semibold">Game Guide</span>
+        </button>
       </div>
     </div>
   )
