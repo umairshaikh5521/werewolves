@@ -16,8 +16,8 @@ interface RoleDist {
 }
 
 const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
-  5: { wolves: 1, seer: 1, doctor: 0, gunner: 0, detective: 0, villagers: 3 },
-  6: { wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 3 },
+  5: { wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
+  6: { wolves: 1, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
   7: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
   8: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
 }

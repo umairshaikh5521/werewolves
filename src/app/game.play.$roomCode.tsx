@@ -10,7 +10,7 @@ import { ActionPanel } from '@/components/game/ActionPanel'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { RoleReveal } from '@/components/game/RoleReveal'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, ChevronUp } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/play/$roomCode')({
@@ -290,22 +290,37 @@ function GamePlayScreen() {
           />
         </div>
 
-        <div className="shrink-0 border-t border-border">
+        <div className="flex h-[160px] shrink-0 flex-col border-t border-border">
           <button
             onClick={() => setChatOpen(true)}
-            className="flex w-full items-center justify-between bg-secondary px-4 py-3 text-sm font-semibold transition-colors hover:bg-secondary/80"
+            className="flex w-full items-center justify-between bg-secondary/60 px-4 py-1.5 text-xs transition-colors hover:bg-secondary/80"
           >
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              <span className="font-display">
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span className="font-display font-semibold">
                 {currentChannel === 'wolves' ? 'Wolf Chat' : currentChannel === 'dead' ? 'Graveyard' : 'Chat'}
               </span>
               {currentChannel === 'wolves' && (
                 <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
               )}
             </div>
-            <span className="text-xs text-muted-foreground">Tap to open</span>
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
           </button>
+          <div className="flex-1" style={{ minHeight: 0 }}>
+            <GameChat
+              messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
+              onSend={handleSendMessage}
+              currentChannel={currentChannel}
+              disabled={chatDisabled}
+              placeholder={
+                currentChannel === 'wolves'
+                  ? 'Wolf chat...'
+                  : currentChannel === 'dead'
+                    ? 'Graveyard chat...'
+                    : 'Message the village...'
+              }
+            />
+          </div>
         </div>
       </div>
 
