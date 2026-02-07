@@ -62,8 +62,12 @@ export const Route = createRootRouteWithContext<{
   }),
 
   beforeLoad: async () => {
-    const token = await getAuth()
-    return { initialToken: token }
+    try {
+      const token = await getAuth()
+      return { initialToken: token }
+    } catch {
+      return { initialToken: null }
+    }
   },
 
   component: RootComponent,
