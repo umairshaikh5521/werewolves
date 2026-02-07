@@ -96,11 +96,51 @@ function LobbyScreen() {
     navigate({ to: '/game' })
   }
 
-  if (!game) {
+  if (game === undefined) {
     return (
       <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <p className="text-sm text-muted-foreground">Finding game...</p>
+      </div>
+    )
+  }
+
+  if (game === null) {
+    return (
+      <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/20">
+          <span className="text-3xl">?</span>
+        </div>
+        <p className="font-display text-lg font-semibold text-foreground">Room Not Found</p>
+        <p className="text-center text-sm text-muted-foreground">
+          The room code "{roomCode.toUpperCase()}" doesn't exist or has expired.
+        </p>
+        <button
+          onClick={() => navigate({ to: '/game' })}
+          className="game-btn bg-primary px-8 py-3 text-sm text-primary-foreground"
+        >
+          Go Home
+        </button>
+      </div>
+    )
+  }
+
+  if (game.status === 'ended') {
+    return (
+      <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <span className="text-3xl">🏁</span>
+        </div>
+        <p className="font-display text-lg font-semibold text-foreground">Game Ended</p>
+        <p className="text-center text-sm text-muted-foreground">
+          This game has already finished.
+        </p>
+        <button
+          onClick={() => navigate({ to: '/game' })}
+          className="game-btn bg-primary px-8 py-3 text-sm text-primary-foreground"
+        >
+          Go Home
+        </button>
       </div>
     )
   }

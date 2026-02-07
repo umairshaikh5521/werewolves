@@ -53,6 +53,9 @@ function GameGuide() {
             <p>
               The village wins by eliminating all werewolves. The werewolves win when they equal or outnumber the villagers.
             </p>
+            <p>
+              <span className="font-semibold text-foreground">Round Limit:</span> The game automatically ends after <span className="font-semibold text-moon-gold">10 rounds</span>. If neither team has won by then, the team with more surviving members wins.
+            </p>
           </div>
         </div>
 

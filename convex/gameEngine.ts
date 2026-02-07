@@ -25,6 +25,7 @@ const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
 const NIGHT_DURATION = 30_000
 const DAY_DURATION = 60_000
 const VOTING_DURATION = 15_000
+const MAX_ROUNDS = 10
 
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array]
@@ -170,6 +171,32 @@ export const transitionPhase = internalMutation({
 
       if (winner) {
         await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: winner })
+        return
+      }
+
+      if (game.turnNumber >= MAX_ROUNDS) {
+        const alivePlayers = (
+          await ctx.db
+            .query('players')
+            .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+            .collect()
+        ).filter((p: any) => p.isAlive)
+
+        const wolves = alivePlayers.filter((p: any) => p.team === 'bad')
+        const villagers = alivePlayers.filter((p: any) => p.team === 'good')
+
+        const finalWinner = wolves.length >= villagers.length ? 'bad' : 'good'
+
+        await ctx.db.insert('chat', {
+          gameId: args.gameId,
+          senderId: players[0]._id,
+          senderName: 'System',
+          content: `Round ${MAX_ROUNDS} reached! The game ends.`,
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+
+        await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: finalWinner })
         return
       }
 

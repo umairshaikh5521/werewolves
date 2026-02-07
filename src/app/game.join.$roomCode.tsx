@@ -29,7 +29,16 @@ function JoinScreen() {
       })
       navigate({ to: '/game/lobby/$roomCode', params: { roomCode: roomCode.toUpperCase() } })
     } catch (e: any) {
-      setError(e.message || 'Failed to join game')
+      const msg = e.message || 'Failed to join game'
+      if (msg.includes('not found')) {
+        setError('Room not found. Please check the code and try again.')
+      } else if (msg.includes('already started')) {
+        setError('This game has already started. You cannot join mid-game.')
+      } else if (msg.includes('full')) {
+        setError('This game is full (8 players max).')
+      } else {
+        setError(msg)
+      }
       setJoining(false)
     }
   }
