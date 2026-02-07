@@ -17,6 +17,8 @@ const roleColors: Record<string, string> = {
   wolf: 'bg-wolf-red/20 border-wolf-red',
   seer: 'bg-seer-blue/20 border-seer-blue',
   doctor: 'bg-doctor-green/20 border-doctor-green',
+  gunner: 'bg-moon-gold/20 border-moon-gold',
+  detective: 'bg-moon-gold/20 border-moon-gold',
   villager: 'bg-secondary border-border',
 }
 
@@ -24,6 +26,8 @@ const roleIcons: Record<string, string> = {
   wolf: '🐺',
   seer: '🔮',
   doctor: '💊',
+  gunner: '🔫',
+  detective: '🕵️',
   villager: '🏠',
 }
 

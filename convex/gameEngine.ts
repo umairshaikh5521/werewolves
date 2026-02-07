@@ -3,11 +3,23 @@ import { mutation, internalMutation } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 
-const ROLE_DISTRIBUTION: Record<number, { wolves: number; seer: number; doctor: number; villagers: number }> = {
-  5: { wolves: 1, seer: 1, doctor: 0, villagers: 3 },
-  6: { wolves: 1, seer: 1, doctor: 1, villagers: 3 },
-  7: { wolves: 2, seer: 1, doctor: 1, villagers: 3 },
-  8: { wolves: 2, seer: 1, doctor: 1, villagers: 4 },
+type GameRole = 'wolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'villager'
+type Team = 'good' | 'bad'
+
+interface RoleDist {
+  wolves: number
+  seer: number
+  doctor: number
+  gunner: number
+  detective: number
+  villagers: number
+}
+
+const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
+  5: { wolves: 1, seer: 1, doctor: 0, gunner: 0, detective: 0, villagers: 3 },
+  6: { wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 3 },
+  7: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  8: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
 }
 
 const NIGHT_DURATION = 30_000
@@ -21,6 +33,27 @@ function shuffle<T>(array: T[]): T[] {
     ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr
+}
+
+function buildRoleList(dist: RoleDist): Array<{ role: GameRole; team: Team }> {
+  const roles: Array<{ role: GameRole; team: Team }> = []
+  for (let i = 0; i < dist.wolves; i++) roles.push({ role: 'wolf', team: 'bad' })
+  for (let i = 0; i < dist.seer; i++) roles.push({ role: 'seer', team: 'good' })
+  for (let i = 0; i < dist.doctor; i++) roles.push({ role: 'doctor', team: 'good' })
+  for (let i = 0; i < dist.gunner; i++) roles.push({ role: 'gunner', team: 'good' })
+  for (let i = 0; i < dist.detective; i++) roles.push({ role: 'detective', team: 'good' })
+  for (let i = 0; i < dist.villagers; i++) roles.push({ role: 'villager', team: 'good' })
+  return roles
+}
+
+function buildRoleData(role: GameRole) {
+  if (role === 'gunner') {
+    return { bullets: 2, isRevealed: false }
+  }
+  if (role === 'doctor') {
+    return {}
+  }
+  return undefined
 }
 
 export const startGame = mutation({
@@ -41,20 +74,18 @@ export const startGame = mutation({
     }
 
     const dist = ROLE_DISTRIBUTION[players.length]
-    const roles: Array<{ role: 'wolf' | 'seer' | 'doctor' | 'villager'; team: 'good' | 'bad' }> = []
-
-    for (let i = 0; i < dist.wolves; i++) roles.push({ role: 'wolf', team: 'bad' })
-    for (let i = 0; i < dist.seer; i++) roles.push({ role: 'seer', team: 'good' })
-    for (let i = 0; i < dist.doctor; i++) roles.push({ role: 'doctor', team: 'good' })
-    for (let i = 0; i < dist.villagers; i++) roles.push({ role: 'villager', team: 'good' })
-
-    const shuffledRoles = shuffle(roles)
+    const roles = shuffle(buildRoleList(dist))
 
     for (let i = 0; i < players.length; i++) {
-      await ctx.db.patch(players[i]._id, {
-        role: shuffledRoles[i].role,
-        team: shuffledRoles[i].team,
-      })
+      const patch: Record<string, unknown> = {
+        role: roles[i].role,
+        team: roles[i].team,
+      }
+      const roleData = buildRoleData(roles[i].role)
+      if (roleData !== undefined) {
+        patch.roleData = roleData
+      }
+      await ctx.db.patch(players[i]._id, patch)
     }
 
     const phaseEndTime = Date.now() + NIGHT_DURATION
@@ -167,6 +198,19 @@ async function resolveNight(
   const killVotes = actions.filter((a: any) => a.type === 'kill')
   const saveActions = actions.filter((a: any) => a.type === 'save')
 
+  const doctor = players.find((p: any) => p.role === 'doctor' && p.isAlive)
+  if (doctor && saveActions.length > 0) {
+    const doctorAction = saveActions.find((a: any) => a.actorId === doctor._id)
+    if (doctorAction) {
+      await ctx.db.patch(doctor._id, {
+        roleData: {
+          ...doctor.roleData,
+          lastProtectedId: doctorAction.targetId,
+        },
+      })
+    }
+  }
+
   if (killVotes.length > 0) {
     const voteCounts: Record<string, number> = {}
     for (const vote of killVotes) {
@@ -198,6 +242,16 @@ async function resolveNight(
         })
         return
       }
+
+      await ctx.db.insert('chat', {
+        gameId,
+        senderId: players[0]._id,
+        senderName: 'System',
+        content: 'Someone was attacked but survived the night!',
+        channel: 'global',
+        timestamp: Date.now(),
+      })
+      return
     }
   }
 
@@ -272,7 +326,7 @@ async function resolveVoting(
   }
 }
 
-function checkWinCondition(players: any[]): string | null {
+export function checkWinCondition(players: any[]): string | null {
   const alive = players.filter((p: any) => p.isAlive)
   const wolves = alive.filter((p: any) => p.team === 'bad')
   const villagers = alive.filter((p: any) => p.team === 'good')

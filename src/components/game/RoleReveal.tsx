@@ -6,13 +6,14 @@ interface RoleRevealProps {
   onDismiss: () => void
 }
 
-const roleConfig: Record<string, { color: string; bg: string; border: string; title: string; description: string }> = {
+const roleConfig: Record<string, { color: string; bg: string; border: string; title: string; description: string; btnColor: string }> = {
   wolf: {
     color: 'text-wolf-red',
     bg: 'bg-wolf-red/10',
     border: 'border-wolf-red/30',
     title: 'Werewolf',
     description: 'Eliminate villagers under the cover of night. Blend in during the day.',
+    btnColor: 'bg-wolf-red hover:bg-wolf-red/90',
   },
   seer: {
     color: 'text-seer-blue',
@@ -20,13 +21,31 @@ const roleConfig: Record<string, { color: string; bg: string; border: string; ti
     border: 'border-seer-blue/30',
     title: 'Seer',
     description: 'Each night, reveal the true nature of one player. Use your visions wisely.',
+    btnColor: 'bg-seer-blue hover:bg-seer-blue/90',
   },
   doctor: {
     color: 'text-doctor-green',
     bg: 'bg-doctor-green/10',
     border: 'border-doctor-green/30',
     title: 'Doctor',
-    description: 'Protect one player each night from the wolves. You can even save yourself.',
+    description: 'Protect one player each night from the wolves. Cannot save the same person twice in a row.',
+    btnColor: 'bg-doctor-green hover:bg-doctor-green/90',
+  },
+  gunner: {
+    color: 'text-moon-gold',
+    bg: 'bg-moon-gold/10',
+    border: 'border-moon-gold/30',
+    title: 'Gunner',
+    description: 'You have 2 silver bullets. During the day, shoot anyone you suspect. Your identity is revealed when you fire.',
+    btnColor: 'bg-moon-gold hover:bg-moon-gold/90',
+  },
+  detective: {
+    color: 'text-moon-gold',
+    bg: 'bg-moon-gold/10',
+    border: 'border-moon-gold/30',
+    title: 'Detective',
+    description: 'Each night, compare two players to learn if they are on the same team or different teams.',
+    btnColor: 'bg-moon-gold hover:bg-moon-gold/90',
   },
   villager: {
     color: 'text-foreground',
@@ -34,6 +53,7 @@ const roleConfig: Record<string, { color: string; bg: string; border: string; ti
     border: 'border-border',
     title: 'Villager',
     description: 'Find the wolves among you. Discuss, deduce, and vote to protect the village.',
+    btnColor: 'bg-primary hover:bg-primary/90',
   },
 }
 
@@ -72,7 +92,6 @@ export function RoleReveal({ role, onDismiss }: RoleRevealProps) {
                 config.border
               )}
             >
-              {/* Asset placeholder - will be replaced with role artwork */}
               <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-black/20">
                 <span className="text-xs text-muted-foreground">Role Art</span>
               </div>
@@ -90,10 +109,7 @@ export function RoleReveal({ role, onDismiss }: RoleRevealProps) {
               onClick={onDismiss}
               className={cn(
                 'game-btn mt-2 w-full max-w-xs py-3.5 text-sm font-semibold text-white',
-                role === 'wolf' && 'bg-wolf-red hover:bg-wolf-red/90',
-                role === 'seer' && 'bg-seer-blue hover:bg-seer-blue/90',
-                role === 'doctor' && 'bg-doctor-green hover:bg-doctor-green/90',
-                role === 'villager' && 'bg-primary hover:bg-primary/90'
+                config.btnColor
               )}
             >
               I understand my role

@@ -25,6 +25,8 @@ export const gameRoleValidator = v.union(
   v.literal('wolf'),
   v.literal('seer'),
   v.literal('doctor'),
+  v.literal('gunner'),
+  v.literal('detective'),
   v.literal('villager')
 )
 
@@ -37,7 +39,9 @@ export const actionTypeValidator = v.union(
   v.literal('vote'),
   v.literal('kill'),
   v.literal('save'),
-  v.literal('scan')
+  v.literal('scan'),
+  v.literal('shoot'),
+  v.literal('investigate')
 )
 
 export const chatChannelValidator = v.union(
@@ -72,6 +76,11 @@ export default defineSchema({
     team: v.optional(teamValidator),
     isAlive: v.boolean(),
     isHost: v.boolean(),
+    roleData: v.optional(v.object({
+      lastProtectedId: v.optional(v.id('players')),
+      bullets: v.optional(v.number()),
+      isRevealed: v.optional(v.boolean()),
+    })),
   })
     .index('by_game', ['gameId'])
     .index('by_game_user', ['gameId', 'userId']),
@@ -83,6 +92,7 @@ export default defineSchema({
     type: actionTypeValidator,
     actorId: v.id('players'),
     targetId: v.id('players'),
+    targetId2: v.optional(v.id('players')),
   }).index('by_game_turn', ['gameId', 'turnNumber']),
 
   chat: defineTable({

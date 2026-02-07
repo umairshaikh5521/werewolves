@@ -38,11 +38,20 @@ function GamePlayScreen() {
       ? { gameId: game._id, playerId: myPlayer._id, turnNumber: game.turnNumber }
       : 'skip'
   )
+  const detectiveResult = useQuery(
+    api.gameActions.getDetectiveResult,
+    game && myPlayer && myPlayer.role === 'detective'
+      ? { gameId: game._id, playerId: myPlayer._id, turnNumber: game.turnNumber }
+      : 'skip'
+  )
 
   const submitAction = useMutation(api.gameActions.submitAction)
+  const shootGun = useMutation(api.gameActions.shootGun)
+  const investigatePlayers = useMutation(api.gameActions.investigatePlayers)
   const sendMessage = useMutation(api.gameChat.sendMessage)
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
+  const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
   const [hasActed, setHasActed] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [showRoleReveal, setShowRoleReveal] = useState(false)
@@ -57,10 +66,13 @@ function GamePlayScreen() {
 
   useEffect(() => {
     setSelectedPlayerId(null)
+    setSelectedPlayerId2(null)
     setHasActed(false)
   }, [game?.phase, game?.turnNumber])
 
+  const isDetective = myPlayer?.role === 'detective' && game?.phase === 'night'
   const selectedPlayer = players?.find((p) => p._id === selectedPlayerId)
+  const selectedPlayer2 = players?.find((p) => p._id === selectedPlayerId2)
 
   const handlePlayerSelect = useCallback(
     (playerId: Id<'players'>) => {
@@ -70,9 +82,29 @@ function GamePlayScreen() {
       if (playerId === myPlayer._id && game.phase !== 'night') return
       if (game.phase === 'night' && myPlayer.role === 'wolf' && target.team === 'bad') return
 
+      if (isDetective) {
+        if (playerId === myPlayer._id) return
+        if (!selectedPlayerId) {
+          setSelectedPlayerId(playerId)
+        } else if (selectedPlayerId === playerId) {
+          setSelectedPlayerId(null)
+        } else if (!selectedPlayerId2) {
+          setSelectedPlayerId2(playerId)
+        } else if (selectedPlayerId2 === playerId) {
+          setSelectedPlayerId2(null)
+        } else {
+          setSelectedPlayerId2(playerId)
+        }
+        return
+      }
+
+      if (myPlayer.role === 'doctor' && game.phase === 'night') {
+        if (myPlayer.roleData?.lastProtectedId === playerId) return
+      }
+
       setSelectedPlayerId((prev) => (prev === playerId ? null : playerId))
     },
-    [game, myPlayer, players]
+    [game, myPlayer, players, isDetective, selectedPlayerId, selectedPlayerId2]
   )
 
   const handleAction = useCallback(async () => {
@@ -99,9 +131,38 @@ function GamePlayScreen() {
       })
       setHasActed(true)
     } catch {
-      // action failed silently
+      // action failed
     }
   }, [game, myPlayer, selectedPlayerId, hasActed, submitAction])
+
+  const handleShoot = useCallback(async () => {
+    if (!game || !myPlayer || !selectedPlayerId) return
+    try {
+      await shootGun({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId: selectedPlayerId,
+      })
+      setSelectedPlayerId(null)
+    } catch {
+      // shoot failed
+    }
+  }, [game, myPlayer, selectedPlayerId, shootGun])
+
+  const handleInvestigate = useCallback(async () => {
+    if (!game || !myPlayer || !selectedPlayerId || !selectedPlayerId2 || hasActed) return
+    try {
+      await investigatePlayers({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId1: selectedPlayerId,
+        targetId2: selectedPlayerId2,
+      })
+      setHasActed(true)
+    } catch {
+      // investigate failed
+    }
+  }, [game, myPlayer, selectedPlayerId, selectedPlayerId2, hasActed, investigatePlayers])
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -124,7 +185,7 @@ function GamePlayScreen() {
           channel,
         })
       } catch {
-        // send failed silently
+        // send failed
       }
     },
     [game, myPlayer, sendMessage]
@@ -175,28 +236,36 @@ function GamePlayScreen() {
 
       {myPlayer.isAlive && myPlayer.role && (
         <div className="flex justify-center pb-1">
-          <RoleBadge role={myPlayer.role} />
+          <RoleBadge role={myPlayer.role} bullets={myPlayer.roleData?.bullets} />
         </div>
       )}
 
       <div className="shrink-0 px-4 py-2">
         <div className="flex flex-wrap justify-center gap-2">
-          {players.map((player) => (
-            <PlayerAvatar
-              key={player._id}
-              name={player.name}
-              isAlive={player.isAlive}
-              isHost={player.isHost}
-              isSelected={selectedPlayerId === player._id}
-              isCurrentPlayer={player._id === myPlayer._id}
-              onClick={
-                player._id !== myPlayer._id && player.isAlive
-                  ? () => handlePlayerSelect(player._id)
-                  : undefined
-              }
-              size="sm"
-            />
-          ))}
+          {players.map((player) => {
+            const isSecondSelected = isDetective && selectedPlayerId2 === player._id
+            const isRevealed = player.roleData?.isRevealed
+            return (
+              <PlayerAvatar
+                key={player._id}
+                name={player.name}
+                isAlive={player.isAlive}
+                isHost={player.isHost}
+                isSelected={selectedPlayerId === player._id || isSecondSelected}
+                isCurrentPlayer={player._id === myPlayer._id}
+                role={isRevealed ? player.role ?? undefined : undefined}
+                showRole={!!isRevealed}
+                onClick={
+                  player._id !== myPlayer._id && player.isAlive
+                    ? () => handlePlayerSelect(player._id)
+                    : myPlayer.role === 'doctor' && player._id === myPlayer._id && game.phase === 'night'
+                      ? () => handlePlayerSelect(player._id)
+                      : undefined
+                }
+                size="sm"
+              />
+            )
+          })}
         </div>
       </div>
 
@@ -211,6 +280,13 @@ function GamePlayScreen() {
             onAction={handleAction}
             hasActed={hasActed}
             seerResult={seerResult}
+            detectiveResult={detectiveResult}
+            bullets={myPlayer.roleData?.bullets}
+            onShoot={handleShoot}
+            selectedPlayerName2={selectedPlayer2?.name}
+            onInvestigate={handleInvestigate}
+            lastProtectedId={myPlayer.roleData?.lastProtectedId}
+            selectedPlayerId2={selectedPlayerId2 || undefined}
           />
         </div>
 
@@ -276,11 +352,13 @@ function GamePlayScreen() {
   )
 }
 
-function RoleBadge({ role }: { role: string }) {
+function RoleBadge({ role, bullets }: { role: string; bullets?: number }) {
   const config: Record<string, { bg: string; text: string; icon: string }> = {
     wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
     seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
     doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
+    gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
+    detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
     villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
   }
   const c = config[role] || config.villager
@@ -292,6 +370,9 @@ function RoleBadge({ role }: { role: string }) {
       <span className={`font-display text-xs font-semibold capitalize ${c.text}`}>
         {role}
       </span>
+      {role === 'gunner' && bullets !== undefined && (
+        <span className="ml-0.5 text-[10px] text-muted-foreground">x{bullets}</span>
+      )}
     </div>
   )
 }
