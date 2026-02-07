@@ -270,7 +270,7 @@ function GamePlayScreen() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto">
+        <div className="shrink-0 overflow-y-auto">
           <ActionPanel
             role={myPlayer.role || 'villager'}
             phase={game.phase}
@@ -290,7 +290,7 @@ function GamePlayScreen() {
           />
         </div>
 
-        <div className="flex h-[160px] shrink-0 flex-col border-t border-border">
+        <div className="flex min-h-0 flex-1 flex-col border-t border-border">
           <button
             onClick={() => setChatOpen(true)}
             className="flex w-full items-center justify-between bg-secondary/60 px-4 py-1.5 text-xs transition-colors hover:bg-secondary/80"
