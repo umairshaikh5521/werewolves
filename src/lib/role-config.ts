@@ -62,7 +62,7 @@ export const roleConfig: Record<string, RoleInfo> = {
     title: 'Detective',
     description: 'Each night, compare two players to learn if they are on the same team or different teams.',
     btnColor: 'bg-moon-gold hover:bg-moon-gold/90',
-    image: '',
+    image: '/detetctive-photoroom.png',
     team: 'village',
     ability: 'Each night, select two players to compare. You will learn whether they belong to the same team or different teams. This powerful ability helps you narrow down the wolves through deduction.',
   },

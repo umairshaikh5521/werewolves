@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Shield, Skull } from 'lucide-react'
+import { ArrowLeft, Shield, Skull, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { roleConfig } from '@/lib/role-config'
 
@@ -7,12 +7,19 @@ export const Route = createFileRoute('/game/guide')({ component: GameGuide })
 
 const roleOrder = ['wolf', 'seer', 'doctor', 'gunner', 'detective', 'villager'] as const
 
+const roleDistribution = [
+  { players: 5, wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
+  { players: 6, wolves: 1, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  { players: 7, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  { players: 8, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+]
+
 function GameGuide() {
   const navigate = useNavigate()
 
   return (
     <div className="stars-bg min-h-[100dvh] px-4 py-6">
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-2xl">
         <button
           onClick={() => navigate({ to: '/game' })}
           className="mb-6 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -33,7 +40,7 @@ function GameGuide() {
           </p>
         </div>
 
-        <div className="mb-8 rounded-2xl border-2 border-border bg-card p-4">
+        <div className="mb-8 rounded-2xl border-2 border-border bg-card p-4 sm:p-6">
           <h2 className="mb-3 font-display text-lg font-bold text-foreground">How to Play</h2>
           <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
             <p>
@@ -46,6 +53,81 @@ function GameGuide() {
             <p>
               The village wins by eliminating all werewolves. The werewolves win when they equal or outnumber the villagers.
             </p>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border-2 border-border bg-card p-4 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-bold text-foreground">Role Distribution</h2>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Roles are assigned based on the number of players in the game.
+          </p>
+
+          <div className="hidden sm:block">
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-secondary/50">
+                    <th className="px-3 py-2.5 text-left font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">Players</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-wolf-red">Wolves</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-seer-blue">Seer</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-doctor-green">Doctor</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Gunner</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Detective</th>
+                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-foreground">Villagers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {roleDistribution.map((row) => (
+                    <tr key={row.players} className="border-b border-border/50 last:border-0">
+                      <td className="px-3 py-2.5 font-display font-bold text-foreground">{row.players}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-wolf-red">{row.wolves}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-seer-blue">{row.seer}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-doctor-green">{row.doctor}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-moon-gold">{row.gunner || '-'}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-moon-gold">{row.detective || '-'}</td>
+                      <td className="px-3 py-2.5 text-center font-semibold text-foreground">{row.villagers}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="space-y-3 sm:hidden">
+            {roleDistribution.map((row) => (
+              <div key={row.players} className="rounded-xl border border-border bg-secondary/30 p-3">
+                <p className="mb-2 font-display text-sm font-bold text-primary">{row.players} Players</p>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Wolves</span>
+                    <span className="font-bold text-wolf-red">{row.wolves}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Seer</span>
+                    <span className="font-bold text-seer-blue">{row.seer}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Doctor</span>
+                    <span className="font-bold text-doctor-green">{row.doctor}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Gunner</span>
+                    <span className="font-bold text-moon-gold">{row.gunner || '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Detective</span>
+                    <span className="font-bold text-moon-gold">{row.detective || '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Villagers</span>
+                    <span className="font-bold text-foreground">{row.villagers}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -69,26 +151,22 @@ function GameGuide() {
                   role.border
                 )}
               >
-                <div className={cn('flex items-center gap-4 p-4', role.bg)}>
-                  <div
-                    className={cn(
-                      'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2',
-                      role.border,
-                      'bg-black/10'
-                    )}
-                  >
+                <div className={cn('flex flex-col items-center gap-3 px-4 pt-5 sm:flex-row sm:gap-5 sm:pt-4', role.bg)}>
+                  <div className="shrink-0">
                     {role.image ? (
                       <img
                         src={role.image}
                         alt={role.title}
-                        className="h-16 w-16 object-contain drop-shadow-md"
+                        className="h-28 w-28 object-contain drop-shadow-lg sm:h-24 sm:w-24"
                       />
                     ) : (
-                      <span className="font-display text-2xl text-muted-foreground">?</span>
+                      <div className="flex h-24 w-24 items-center justify-center">
+                        <span className="font-display text-4xl text-muted-foreground">?</span>
+                      </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 pb-3 text-center sm:pb-4 sm:text-left">
+                    <div className="flex items-center justify-center gap-2 sm:justify-start">
                       <h3 className={cn('font-display text-xl font-bold', role.color)}>
                         {role.title}
                       </h3>
@@ -100,7 +178,7 @@ function GameGuide() {
                     </div>
                     <span
                       className={cn(
-                        'mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                        'mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
                         role.team === 'evil'
                           ? 'bg-wolf-red/20 text-wolf-red'
                           : 'bg-village-green/20 text-village-green'
@@ -110,7 +188,7 @@ function GameGuide() {
                     </span>
                   </div>
                 </div>
-                <div className="px-4 pb-4 pt-3">
+                <div className="px-4 pb-4 pt-3 sm:px-5">
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {role.ability}
                   </p>

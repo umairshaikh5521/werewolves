@@ -36,18 +36,12 @@ export function RoleReveal({ role, onDismiss, skipReveal }: RoleRevealProps) {
               You are
             </p>
 
-            <div
-              className={cn(
-                'flex h-44 w-44 items-center justify-center overflow-hidden rounded-3xl border-2',
-                config.bg,
-                config.border
-              )}
-            >
+            <div className="flex items-center justify-center">
               {config.image ? (
                 <img
                   src={config.image}
                   alt={config.title}
-                  className="h-36 w-36 object-contain drop-shadow-lg"
+                  className="h-52 w-52 object-contain drop-shadow-[0_0_30px_rgba(245,166,35,0.3)]"
                 />
               ) : (
                 <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-black/20">
