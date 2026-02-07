@@ -88,10 +88,14 @@ export function PlayerAvatar({
       <span
         className={cn(
           'max-w-full truncate text-xs font-semibold',
-          isAlive ? 'text-foreground' : 'text-dead-gray line-through'
+          isCurrentPlayer && isAlive
+            ? 'text-moon-gold'
+            : isAlive
+              ? 'text-foreground'
+              : 'text-dead-gray line-through'
         )}
       >
-        {name}
+        {isCurrentPlayer ? 'YOU' : name}
       </span>
 
       {showRole && role && (
