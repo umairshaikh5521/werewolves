@@ -70,7 +70,7 @@ function buildRoleData(role: GameRole) {
     return { bullets: 2, isRevealed: false }
   }
   if (role === 'doctor') {
-    return { lastProtectedId: null }
+    return {}
   }
   return undefined
 }
