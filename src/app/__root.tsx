@@ -63,7 +63,7 @@ export const Route = createRootRouteWithContext<{
       },
       {
         property: 'og:url',
-        content: 'https://moonrise.game',
+        content: 'https://moonrise-game.vercel.app',
       },
       {
         property: 'og:title',
@@ -75,7 +75,15 @@ export const Route = createRootRouteWithContext<{
       },
       {
         property: 'og:image',
-        content: '/social-share.png',
+        content: 'https://moonrise-game.vercel.app/social-share.png',
+      },
+      {
+        property: 'og:image:secure_url',
+        content: 'https://moonrise-game.vercel.app/social-share.png',
+      },
+      {
+        property: 'og:image:type',
+        content: 'image/png',
       },
       {
         property: 'og:image:width',
@@ -100,7 +108,7 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: 'twitter:url',
-        content: 'https://moonrise.game',
+        content: 'https://moonrise-game.vercel.app',
       },
       {
         name: 'twitter:title',
@@ -112,7 +120,7 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: 'twitter:image',
-        content: '/social-share.png',
+        content: 'https://moonrise-game.vercel.app/social-share.png',
       },
       {
         name: 'twitter:image:alt',
