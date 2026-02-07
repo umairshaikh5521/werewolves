@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -8,7 +8,9 @@ import { PlayerAvatar } from '@/components/game/PlayerAvatar'
 import { GameChat } from '@/components/game/GameChat'
 import { ActionPanel } from '@/components/game/ActionPanel'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
-import { MessageCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { RoleReveal } from '@/components/game/RoleReveal'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { MessageCircle } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/play/$roomCode')({
@@ -43,13 +45,19 @@ function GamePlayScreen() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [hasActed, setHasActed] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  const [showRoleReveal, setShowRoleReveal] = useState(false)
+  const roleRevealShown = useRef(false)
+
+  useEffect(() => {
+    if (myPlayer?.role && !roleRevealShown.current) {
+      roleRevealShown.current = true
+      setShowRoleReveal(true)
+    }
+  }, [myPlayer?.role])
 
   useEffect(() => {
     setSelectedPlayerId(null)
     setHasActed(false)
-    if (game?.phase === 'day') {
-      setChatOpen(true)
-    }
   }, [game?.phase, game?.turnNumber])
 
   const selectedPlayer = players?.find((p) => p._id === selectedPlayerId)
@@ -155,11 +163,6 @@ function GamePlayScreen() {
       ? 'wolves'
       : 'global'
 
-  const canAct =
-    myPlayer.isAlive &&
-    ((game.phase === 'night' && myPlayer.role !== 'villager') ||
-      game.phase === 'voting')
-
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       <div className="shrink-0 px-4 pt-4 pb-2">
@@ -198,7 +201,7 @@ function GamePlayScreen() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-border bg-card/50">
+        <div className="flex-1 overflow-y-auto">
           <ActionPanel
             role={myPlayer.role || 'villager'}
             phase={game.phase}
@@ -211,10 +214,10 @@ function GamePlayScreen() {
           />
         </div>
 
-        <div className="flex flex-1 flex-col" style={{ minHeight: chatOpen ? '200px' : 'auto' }}>
+        <div className="shrink-0 border-t border-border">
           <button
-            onClick={() => setChatOpen(!chatOpen)}
-            className="flex items-center justify-between border-b border-border bg-secondary px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary/80"
+            onClick={() => setChatOpen(true)}
+            className="flex w-full items-center justify-between bg-secondary px-4 py-3 text-sm font-semibold transition-colors hover:bg-secondary/80"
           >
             <div className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
@@ -225,28 +228,50 @@ function GamePlayScreen() {
                 <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
               )}
             </div>
-            {chatOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            <span className="text-xs text-muted-foreground">Tap to open</span>
           </button>
-
-          {chatOpen && (
-            <div className="flex-1" style={{ minHeight: 0 }}>
-              <GameChat
-                messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
-                onSend={handleSendMessage}
-                currentChannel={currentChannel}
-                disabled={chatDisabled}
-                placeholder={
-                  currentChannel === 'wolves'
-                    ? 'Wolf chat...'
-                    : currentChannel === 'dead'
-                      ? 'Graveyard chat...'
-                      : 'Message the village...'
-                }
-              />
-            </div>
-          )}
         </div>
       </div>
+
+      <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="flex h-[60dvh] flex-col gap-0 rounded-t-2xl p-0"
+        >
+          <SheetHeader className="shrink-0 border-b border-border px-4 py-3">
+            <SheetTitle className="flex items-center gap-2 font-display text-sm">
+              <MessageCircle className="h-4 w-4" />
+              {currentChannel === 'wolves' ? 'Wolf Chat' : currentChannel === 'dead' ? 'Graveyard' : 'Village Chat'}
+              {currentChannel === 'wolves' && (
+                <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
+              )}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1" style={{ minHeight: 0 }}>
+            <GameChat
+              messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
+              onSend={handleSendMessage}
+              currentChannel={currentChannel}
+              disabled={chatDisabled}
+              placeholder={
+                currentChannel === 'wolves'
+                  ? 'Wolf chat...'
+                  : currentChannel === 'dead'
+                    ? 'Graveyard chat...'
+                    : 'Message the village...'
+              }
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {showRoleReveal && myPlayer.role && (
+        <RoleReveal
+          role={myPlayer.role}
+          onDismiss={() => setShowRoleReveal(false)}
+        />
+      )}
     </div>
   )
 }

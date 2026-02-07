@@ -152,7 +152,13 @@ body {
   100% { background-position: 200% 0; }
 }
 
+@keyframes scale-in {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .animate-float { animation: float 3s ease-in-out infinite; }
+.animate-scale-in { animation: scale-in 0.5s ease-out forwards; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-slide-up { animation: slide-up 0.4s ease-out forwards; }
 .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
