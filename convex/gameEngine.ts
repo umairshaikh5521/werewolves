@@ -36,14 +36,32 @@ function shuffle<T>(array: T[]): T[] {
   return arr
 }
 
-function buildRoleList(dist: RoleDist): Array<{ role: GameRole; team: Team }> {
+function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: GameRole; team: Team }> {
   const roles: Array<{ role: GameRole; team: Team }> = []
-  for (let i = 0; i < dist.wolves; i++) roles.push({ role: 'wolf', team: 'bad' })
-  for (let i = 0; i < dist.seer; i++) roles.push({ role: 'seer', team: 'good' })
-  for (let i = 0; i < dist.doctor; i++) roles.push({ role: 'doctor', team: 'good' })
-  for (let i = 0; i < dist.gunner; i++) roles.push({ role: 'gunner', team: 'good' })
-  for (let i = 0; i < dist.detective; i++) roles.push({ role: 'detective', team: 'good' })
-  for (let i = 0; i < dist.villagers; i++) roles.push({ role: 'villager', team: 'good' })
+
+  for (let i = 0; i < dist.wolves; i++) {
+    roles.push({ role: 'wolf', team: 'bad' })
+  }
+  for (let i = 0; i < dist.seer; i++) {
+    roles.push({ role: 'seer', team: 'good' })
+  }
+  for (let i = 0; i < dist.doctor; i++) {
+    roles.push({ role: 'doctor', team: 'good' })
+  }
+  for (let i = 0; i < dist.gunner; i++) {
+    roles.push({ role: 'gunner', team: 'good' })
+  }
+  for (let i = 0; i < dist.detective; i++) {
+    roles.push({ role: 'detective', team: 'good' })
+  }
+  for (let i = 0; i < dist.villagers; i++) {
+    roles.push({ role: 'villager', team: 'good' })
+  }
+
+  if (roles.length !== expectedCount) {
+    throw new Error(`Role distribution error: Expected ${expectedCount} roles but got ${roles.length}`)
+  }
+
   return roles
 }
 
@@ -52,7 +70,7 @@ function buildRoleData(role: GameRole) {
     return { bullets: 2, isRevealed: false }
   }
   if (role === 'doctor') {
-    return {}
+    return { lastProtectedId: null }
   }
   return undefined
 }
@@ -75,19 +93,54 @@ export const startGame = mutation({
     }
 
     const dist = ROLE_DISTRIBUTION[players.length]
-    const roles = shuffle(buildRoleList(dist))
+    if (!dist) {
+      throw new Error(`No role distribution defined for ${players.length} players`)
+    }
+
+    const roles = buildRoleList(dist, players.length)
+    const shuffledRoles = shuffle(roles)
+
+    if (shuffledRoles.length !== players.length) {
+      throw new Error(`Role count mismatch: ${shuffledRoles.length} roles for ${players.length} players`)
+    }
+
+    console.log(`[Game ${args.gameId}] Starting with ${players.length} players`)
+    console.log(`[Game ${args.gameId}] Role distribution:`, dist)
+    console.log(`[Game ${args.gameId}] Assigning roles:`, shuffledRoles.map(r => r.role).join(', '))
 
     for (let i = 0; i < players.length; i++) {
-      const patch: Record<string, unknown> = {
-        role: roles[i].role,
-        team: roles[i].team,
+      const roleInfo = shuffledRoles[i]
+      if (!roleInfo) {
+        throw new Error(`Missing role for player ${i}`)
       }
-      const roleData = buildRoleData(roles[i].role)
+
+      const patch: Record<string, unknown> = {
+        role: roleInfo.role,
+        team: roleInfo.team,
+        isAlive: true,
+      }
+
+      const roleData = buildRoleData(roleInfo.role)
       if (roleData !== undefined) {
         patch.roleData = roleData
       }
+
       await ctx.db.patch(players[i]._id, patch)
+      console.log(`[Game ${args.gameId}] Assigned ${roleInfo.role} (${roleInfo.team}) to player ${players[i].name}`)
     }
+
+    const assignedPlayers = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    const roleCount: Record<string, number> = {}
+    assignedPlayers.forEach((p) => {
+      if (p.role) {
+        roleCount[p.role] = (roleCount[p.role] || 0) + 1
+      }
+    })
+    console.log(`[Game ${args.gameId}] Final role count:`, roleCount)
 
     const phaseEndTime = Date.now() + NIGHT_DURATION
 
