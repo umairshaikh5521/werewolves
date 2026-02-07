@@ -8,8 +8,7 @@ import { PlayerAvatar } from '@/components/game/PlayerAvatar'
 import { GameChat } from '@/components/game/GameChat'
 import { ActionPanel } from '@/components/game/ActionPanel'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { MessageCircle, Zap } from 'lucide-react'
+import { MessageCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/play/$roomCode')({
@@ -43,11 +42,14 @@ function GamePlayScreen() {
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [hasActed, setHasActed] = useState(false)
-  const [activeTab, setActiveTab] = useState('action')
+  const [chatOpen, setChatOpen] = useState(false)
 
   useEffect(() => {
     setSelectedPlayerId(null)
     setHasActed(false)
+    if (game?.phase === 'day') {
+      setChatOpen(true)
+    }
   }, [game?.phase, game?.turnNumber])
 
   const selectedPlayer = players?.find((p) => p._id === selectedPlayerId)
@@ -196,46 +198,38 @@ function GamePlayScreen() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex flex-1 flex-col"
-        >
-          <TabsList className="mx-4 grid w-auto grid-cols-2 bg-secondary">
-            <TabsTrigger
-              value="action"
-              className="gap-1.5 font-display text-xs font-semibold data-[state=active]:bg-card"
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Action
-            </TabsTrigger>
-            <TabsTrigger
-              value="chat"
-              className="gap-1.5 font-display text-xs font-semibold data-[state=active]:bg-card"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              Chat
+        <div className="shrink-0 border-b border-border bg-card/50">
+          <ActionPanel
+            role={myPlayer.role || 'villager'}
+            phase={game.phase}
+            isAlive={myPlayer.isAlive}
+            selectedPlayerName={selectedPlayer?.name}
+            selectedPlayerId={selectedPlayerId || undefined}
+            onAction={handleAction}
+            hasActed={hasActed}
+            seerResult={seerResult}
+          />
+        </div>
+
+        <div className="flex flex-1 flex-col" style={{ minHeight: chatOpen ? '200px' : 'auto' }}>
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className="flex items-center justify-between border-b border-border bg-secondary px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary/80"
+          >
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              <span className="font-display">
+                {currentChannel === 'wolves' ? 'Wolf Chat' : currentChannel === 'dead' ? 'Graveyard' : 'Chat'}
+              </span>
               {currentChannel === 'wolves' && (
-                <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-wolf-red" />
+                <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
               )}
-            </TabsTrigger>
-          </TabsList>
+            </div>
+            {chatOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
 
-          <TabsContent value="action" className="mt-0 flex-1">
-            <ActionPanel
-              role={myPlayer.role || 'villager'}
-              phase={game.phase}
-              isAlive={myPlayer.isAlive}
-              selectedPlayerName={selectedPlayer?.name}
-              selectedPlayerId={selectedPlayerId || undefined}
-              onAction={handleAction}
-              hasActed={hasActed}
-              seerResult={seerResult}
-            />
-          </TabsContent>
-
-          <TabsContent value="chat" className="mt-0 flex-1" style={{ minHeight: 0 }}>
-            <div className="flex h-full flex-col">
+          {chatOpen && (
+            <div className="flex-1" style={{ minHeight: 0 }}>
               <GameChat
                 messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
                 onSend={handleSendMessage}
@@ -250,8 +244,8 @@ function GamePlayScreen() {
                 }
               />
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
     </div>
   )
