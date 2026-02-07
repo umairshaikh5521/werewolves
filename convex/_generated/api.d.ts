@@ -9,6 +9,10 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as gameActions from "../gameActions.js";
+import type * as gameChat from "../gameChat.js";
+import type * as gameEngine from "../gameEngine.js";
+import type * as games from "../games.js";
 import type * as http from "../http.js";
 import type * as userRoles from "../userRoles.js";
 
@@ -20,6 +24,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  gameActions: typeof gameActions;
+  gameChat: typeof gameChat;
+  gameEngine: typeof gameEngine;
+  games: typeof games;
   http: typeof http;
   userRoles: typeof userRoles;
 }>;
