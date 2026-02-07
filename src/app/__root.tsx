@@ -45,14 +45,107 @@ export const Route = createRootRouteWithContext<{
         content: 'A real-time multiplayer werewolf game. Trust no one.',
       },
       {
+        name: 'keywords',
+        content: 'werewolf game, social deduction, multiplayer game, online game, party game, mafia game, moonrise',
+      },
+      {
+        name: 'author',
+        content: 'Moonrise',
+      },
+      {
         name: 'theme-color',
         content: '#0f1729',
+      },
+      // Open Graph / Facebook
+      {
+        property: 'og:type',
+        content: 'website',
+      },
+      {
+        property: 'og:url',
+        content: 'https://moonrise.game',
+      },
+      {
+        property: 'og:title',
+        content: 'Moonrise - Social Deduction Game',
+      },
+      {
+        property: 'og:description',
+        content: 'A real-time multiplayer werewolf game. Trust no one.',
+      },
+      {
+        property: 'og:image',
+        content: '/social-share.png',
+      },
+      {
+        property: 'og:image:width',
+        content: '1200',
+      },
+      {
+        property: 'og:image:height',
+        content: '630',
+      },
+      {
+        property: 'og:image:alt',
+        content: 'Moonrise - Social Deduction. Trust No One.',
+      },
+      {
+        property: 'og:site_name',
+        content: 'Moonrise',
+      },
+      // Twitter Card
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+      {
+        name: 'twitter:url',
+        content: 'https://moonrise.game',
+      },
+      {
+        name: 'twitter:title',
+        content: 'Moonrise - Social Deduction Game',
+      },
+      {
+        name: 'twitter:description',
+        content: 'A real-time multiplayer werewolf game. Trust no one.',
+      },
+      {
+        name: 'twitter:image',
+        content: '/social-share.png',
+      },
+      {
+        name: 'twitter:image:alt',
+        content: 'Moonrise - Social Deduction. Trust No One.',
       },
     ],
     links: [
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      // Favicon
+      {
+        rel: 'icon',
+        type: 'image/x-icon',
+        href: '/favicon.ico',
+      },
+      {
+        rel: 'apple-touch-icon',
+        sizes: '192x192',
+        href: '/logo192.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '192x192',
+        href: '/logo192.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '512x512',
+        href: '/logo512.png',
       },
       {
         rel: 'manifest',
