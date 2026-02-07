@@ -236,7 +236,9 @@ function GamePlayScreen() {
 
       {myPlayer.isAlive && myPlayer.role && (
         <div className="flex justify-center pb-1">
-          <RoleBadge role={myPlayer.role} bullets={myPlayer.roleData?.bullets} />
+          <button onClick={() => setShowRoleReveal(true)}>
+            <RoleBadge role={myPlayer.role} bullets={myPlayer.roleData?.bullets} />
+          </button>
         </div>
       )}
 
@@ -361,6 +363,7 @@ function GamePlayScreen() {
         <RoleReveal
           role={myPlayer.role}
           onDismiss={() => setShowRoleReveal(false)}
+          skipReveal={roleRevealShown.current}
         />
       )}
     </div>

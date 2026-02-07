@@ -69,15 +69,17 @@ export function PlayerAvatar({
       <div
         className={cn(
           'flex h-8 w-8 items-center justify-center rounded-full border',
-          isAlive
-            ? (showRole && role ? roleColors[role] : 'bg-secondary border-border')
-            : 'bg-dead-gray/30 border-dead-gray/50'
+          showRole && role
+            ? roleColors[role]
+            : isAlive
+              ? 'bg-secondary border-border'
+              : 'bg-dead-gray/30 border-dead-gray/50'
         )}
       >
-        {!isAlive ? (
-          <Skull className="h-4 w-4 text-dead-gray" />
-        ) : showRole && role ? (
+        {showRole && role ? (
           <span className="text-sm">{roleIcons[role]}</span>
+        ) : !isAlive ? (
+          <Skull className="h-4 w-4 text-dead-gray" />
         ) : (
           <User className="h-4 w-4 text-muted-foreground" />
         )}
@@ -92,7 +94,7 @@ export function PlayerAvatar({
         {name}
       </span>
 
-      {showRole && role && isAlive && (
+      {showRole && role && (
         <span className="text-[10px] capitalize text-muted-foreground">{role}</span>
       )}
     </button>

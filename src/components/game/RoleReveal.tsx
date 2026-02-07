@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 interface RoleRevealProps {
   role: string
   onDismiss: () => void
+  skipReveal?: boolean
 }
 
 const roleConfig: Record<string, { color: string; bg: string; border: string; title: string; description: string; btnColor: string }> = {
@@ -57,8 +58,8 @@ const roleConfig: Record<string, { color: string; bg: string; border: string; ti
   },
 }
 
-export function RoleReveal({ role, onDismiss }: RoleRevealProps) {
-  const [stage, setStage] = useState<'reveal' | 'shown'>('reveal')
+export function RoleReveal({ role, onDismiss, skipReveal }: RoleRevealProps) {
+  const [stage, setStage] = useState<'reveal' | 'shown'>(skipReveal ? 'shown' : 'reveal')
   const config = roleConfig[role] || roleConfig.villager
 
   return (
