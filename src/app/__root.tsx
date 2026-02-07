@@ -18,10 +18,8 @@ import { authClient } from '@/lib/auth-client'
 import { getToken } from '@/lib/auth-server'
 import appCss from '../styles.css?url'
 
-// Create Convex client for the provider
 const convexClient = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL!)
 
-// Get auth token for SSR hydration
 const getAuth = createServerFn({ method: 'GET' }).handler(async () => {
   return await getToken()
 })
@@ -37,10 +35,18 @@ export const Route = createRootRouteWithContext<{
       },
       {
         name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
+        content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
       },
       {
-        title: 'TanStack Start + Convex',
+        title: 'Moonrise - Social Deduction Game',
+      },
+      {
+        name: 'description',
+        content: 'A real-time multiplayer werewolf game. Trust no one.',
+      },
+      {
+        name: 'theme-color',
+        content: '#0f1729',
       },
     ],
     links: [
@@ -48,10 +54,13 @@ export const Route = createRootRouteWithContext<{
         rel: 'stylesheet',
         href: appCss,
       },
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
     ],
   }),
 
-  // Fetch auth token during SSR for hydration
   beforeLoad: async () => {
     const token = await getAuth()
     return { initialToken: token }
@@ -78,11 +87,14 @@ function RootComponent() {
 
 function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-4xl font-bold">404</h1>
-      <p className="text-muted-foreground">Page not found</p>
-      <Link to="/" className="text-primary underline hover:no-underline">
-        Go home
+    <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15">
+        <span className="text-3xl">🌕</span>
+      </div>
+      <h1 className="font-display text-3xl font-bold text-foreground">Lost in the woods</h1>
+      <p className="text-sm text-muted-foreground">This page doesn't exist</p>
+      <Link to="/game" className="game-btn bg-primary px-6 py-2.5 text-sm text-primary-foreground">
+        Go Home
       </Link>
     </div>
   )
