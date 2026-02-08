@@ -339,6 +339,7 @@ function GamePlayScreen() {
     return (
       <GameOverOverlay
         winningTeam={game.winningTeam}
+        endReason={game.endReason}
         players={players}
         onBackToHome={handleBackToHome}
         onBackToLobby={handleBackToLobby}

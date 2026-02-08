@@ -169,7 +169,14 @@ export const shootGun = mutation({
 
     const winner = checkWinCondition(updatedPlayers)
     if (winner) {
-      await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: winner })
+      const endReason = winner === 'good'
+        ? `${gunner.name} shot the last werewolf!`
+        : `${gunner.name} shot a villager and the wolves won!`
+      await ctx.db.patch(args.gameId, {
+        status: 'ended',
+        winningTeam: winner,
+        endReason
+      })
     }
 
     return { killed: target.name }

@@ -12,6 +12,7 @@ interface Player {
 
 interface GameOverOverlayProps {
   winningTeam: string
+  endReason?: string
   players: Player[]
   onBackToHome: () => void
   onBackToLobby?: () => void
@@ -22,6 +23,7 @@ interface GameOverOverlayProps {
 
 export function GameOverOverlay({
   winningTeam,
+  endReason,
   players,
   onBackToHome,
   onBackToLobby,
@@ -52,10 +54,10 @@ export function GameOverOverlay({
           >
             {isVillageWin ? 'Village Wins!' : 'Werewolves Win!'}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isVillageWin
+          <p className="mt-2 text-sm font-medium text-foreground">
+            {endReason || (isVillageWin
               ? 'All the wolves have been eliminated'
-              : 'The wolves have overtaken the village'}
+              : 'The wolves have overtaken the village')}
           </p>
         </div>
 

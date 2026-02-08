@@ -68,6 +68,7 @@ export default defineSchema({
     phase: gamePhaseValidator,
     phaseEndTime: v.number(),
     winningTeam: v.optional(v.string()),
+    endReason: v.optional(v.string()),
   }).index('by_code', ['roomCode']),
 
   players: defineTable({

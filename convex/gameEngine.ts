@@ -201,15 +201,22 @@ export const transitionPhase = internalMutation({
     if (game.phase === 'night') {
       await resolveNight(ctx, args.gameId, players, actions, game)
 
-      const winner = checkWinCondition(
-        await ctx.db
-          .query('players')
-          .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
-          .collect()
-      )
+      const updatedPlayers = await ctx.db
+        .query('players')
+        .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+        .collect()
+
+      const winner = checkWinCondition(updatedPlayers)
 
       if (winner) {
-        await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: winner })
+        const endReason = winner === 'good'
+          ? 'All werewolves have been eliminated'
+          : 'The werewolves have overtaken the village'
+        await ctx.db.patch(args.gameId, {
+          status: 'ended',
+          winningTeam: winner,
+          endReason
+        })
         return
       }
 
@@ -229,17 +236,28 @@ export const transitionPhase = internalMutation({
         expectedPhase: 'voting',
       })
     } else if (game.phase === 'voting') {
-      await resolveVoting(ctx, args.gameId, players, actions)
+      const eliminatedPlayer = await resolveVoting(ctx, args.gameId, players, actions)
 
-      const winner = checkWinCondition(
-        await ctx.db
-          .query('players')
-          .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
-          .collect()
-      )
+      const updatedPlayers = await ctx.db
+        .query('players')
+        .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+        .collect()
+
+      const winner = checkWinCondition(updatedPlayers)
 
       if (winner) {
-        await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: winner })
+        const endReason = eliminatedPlayer
+          ? winner === 'good'
+            ? `${eliminatedPlayer.name} was the last werewolf!`
+            : `The werewolves have overtaken the village`
+          : winner === 'good'
+            ? 'All werewolves have been eliminated'
+            : 'The werewolves have overtaken the village'
+        await ctx.db.patch(args.gameId, {
+          status: 'ended',
+          winningTeam: winner,
+          endReason
+        })
         return
       }
 
@@ -265,7 +283,11 @@ export const transitionPhase = internalMutation({
           timestamp: Date.now(),
         })
 
-        await ctx.db.patch(args.gameId, { status: 'ended', winningTeam: finalWinner })
+        await ctx.db.patch(args.gameId, {
+          status: 'ended',
+          winningTeam: finalWinner,
+          endReason: `Maximum rounds (${MAX_ROUNDS}) reached`
+        })
         return
       }
 
@@ -400,7 +422,7 @@ async function resolveVoting(
   gameId: Id<'games'>,
   players: any[],
   actions: any[]
-) {
+): Promise<{ name: string } | null> {
   const votes = actions.filter((a: any) => a.type === 'vote' && a.phase === 'voting')
 
   if (votes.length === 0) {
@@ -412,7 +434,7 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
-    return
+    return null
   }
 
   const voteCounts: Map<string, number> = new Map()
@@ -444,6 +466,7 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
+    return eliminated || null
   } else {
     await ctx.db.insert('chat', {
       gameId,
@@ -453,6 +476,7 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
+    return null
   }
 }
 
