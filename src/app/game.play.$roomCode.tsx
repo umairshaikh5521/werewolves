@@ -213,7 +213,7 @@ function GamePlayScreen() {
       let channel: 'global' | 'wolves' | 'dead'
       if (!myPlayer.isAlive) {
         channel = 'dead'
-      } else if (game.phase === 'night' && myPlayer.role === 'wolf') {
+      } else if (game.phase === 'night' && (myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf')) {
         channel = 'wolves'
       } else {
         channel = 'global'
@@ -384,6 +384,11 @@ function GamePlayScreen() {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
             const hasVoted = game.phase === 'voting' && voters?.some((id) => id === player._id)
+            const isMyWolfTeammate =
+              myPlayer.team === 'bad' &&
+              player.team === 'bad' &&
+              player._id !== myPlayer._id &&
+              player.isAlive
             return (
               <PlayerAvatar
                 key={player._id}
@@ -393,7 +398,7 @@ function GamePlayScreen() {
                 isSelected={selectedPlayerId === player._id || isSecondSelected}
                 isCurrentPlayer={player._id === myPlayer._id}
                 hasVoted={hasVoted}
-                role={isRevealed ? player.role ?? undefined : undefined}
+                role={isRevealed ? player.role ?? undefined : isMyWolfTeammate ? player.role ?? undefined : undefined}
                 showRole={!!isRevealed}
                 onClick={
                   player._id !== myPlayer._id && player.isAlive
@@ -404,6 +409,7 @@ function GamePlayScreen() {
                 }
                 size="sm"
                 playerIndex={index}
+                isWolfTeammate={isMyWolfTeammate}
               />
             )
           })}

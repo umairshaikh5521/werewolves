@@ -16,6 +16,7 @@ interface PlayerAvatarProps {
   onClick?: () => void
   size?: 'sm' | 'md' | 'lg'
   playerIndex?: number
+  isWolfTeammate?: boolean
 }
 
 const roleColors: Record<string, string> = {
@@ -52,6 +53,7 @@ export function PlayerAvatar({
   onClick,
   size = 'md',
   playerIndex = 0,
+  isWolfTeammate = false,
 }: PlayerAvatarProps) {
   const sizeClasses = {
     sm: 'w-16 h-20',
@@ -66,7 +68,11 @@ export function PlayerAvatar({
       className={cn(
         'relative flex flex-col items-center justify-center gap-1 rounded-2xl border-2 p-2 transition-all',
         sizeClasses[size],
-        isAlive ? 'border-border bg-card' : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
+        isWolfTeammate && isAlive
+          ? 'border-[#EF4444] bg-[#EF4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+          : isAlive
+            ? 'border-border bg-card'
+            : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
         isSelected && isAlive && 'border-primary animate-pulse-glow',
         isCurrentPlayer && isAlive && 'ring-2 ring-moon-gold/40',
         onClick && isAlive && 'cursor-pointer hover:border-primary/60 active:scale-95',
@@ -77,7 +83,13 @@ export function PlayerAvatar({
         <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
       )}
 
-      {showReadyStatus && (
+      {isWolfTeammate && isAlive && role && (
+        <div className="absolute -top-1 -left-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#EF4444] border border-white">
+          <span className="text-sm">{role === 'wolf' ? '🐺' : '🐱'}</span>
+        </div>
+      )}
+
+      {showReadyStatus && !isWolfTeammate && (
         <div
           className={cn(
             'absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full',
