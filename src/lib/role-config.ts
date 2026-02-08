@@ -46,11 +46,11 @@ export const roleConfig: Record<string, RoleInfo> = {
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/30',
     title: 'Kitten Wolf',
-    description: 'A young werewolf with a special gift. Once per game, bite a villager to convert them to your pack.',
+    description: 'A young werewolf with a special gift. Each night, choose to either kill a villager or use your one-time bite to convert them.',
     btnColor: 'bg-amber-500 hover:bg-amber-500/90',
     image: '/kitten-wolf.png',
     team: 'evil',
-    ability: 'During the night, you can choose to use your Bite ability instead of voting to kill. The bitten player loses their role and becomes a Werewolf, joining your team. You can only use this ability ONCE per game. When you bite, no kill happens that night. After using your bite, you become a regular Werewolf. Choose wisely - converting a powerful role like the Seer can swing the game in your favor.',
+    ability: 'Each night, you must choose one action: Kill a villager like a regular wolf, OR use your one-time Bite ability to convert a villager to the werewolf team. You cannot do both in the same night. The bitten player loses their role and becomes a Werewolf. Once you use your bite, it is gone for the rest of the game. Choose wisely - converting a powerful role like the Seer can swing the game in your favor.',
   },
   seer: {
     color: 'text-seer-blue',

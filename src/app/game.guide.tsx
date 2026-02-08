@@ -8,14 +8,14 @@ export const Route = createFileRoute('/game/guide')({ component: GameGuide })
 const roleOrder = ['wolf', 'kittenWolf', 'seer', 'doctor', 'gunner', 'detective', 'villager'] as const
 
 const roleDistribution = [
-  { players: 5, wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
-  { players: 6, wolves: 1, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  { players: 7, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  { players: 8, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
-  { players: 9, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
-  { players: 10, wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
-  { players: 11, wolves: 3, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
-  { players: 12, wolves: 3, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 5 },
+  { players: 5, wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
+  { players: 6, wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  { players: 7, wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  { players: 8, wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+  { players: 9, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+  { players: 10, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
+  { players: 11, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
+  { players: 12, wolves: 3, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
 ]
 
 function GameGuide() {
@@ -77,25 +77,27 @@ function GameGuide() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/50">
-                    <th className="px-3 py-2.5 text-left font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">Players</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-wolf-red">Wolves</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-seer-blue">Seer</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-doctor-green">Doctor</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Gunner</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Detective</th>
-                    <th className="px-3 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-foreground">Villagers</th>
+                    <th className="px-2 py-2.5 text-left font-display text-xs font-bold uppercase tracking-wider text-muted-foreground">Players</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-wolf-red">Wolves</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-amber-500">Kitten</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-seer-blue">Seer</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-doctor-green">Doctor</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Gunner</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Detective</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-foreground">Villagers</th>
                   </tr>
                 </thead>
                 <tbody>
                   {roleDistribution.map((row) => (
                     <tr key={row.players} className="border-b border-border/50 last:border-0">
-                      <td className="px-3 py-2.5 font-display font-bold text-foreground">{row.players}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-wolf-red">{row.wolves}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-seer-blue">{row.seer}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-doctor-green">{row.doctor}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-moon-gold">{row.gunner || '-'}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-moon-gold">{row.detective || '-'}</td>
-                      <td className="px-3 py-2.5 text-center font-semibold text-foreground">{row.villagers}</td>
+                      <td className="px-2 py-2.5 font-display font-bold text-foreground">{row.players}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-wolf-red">{row.wolves}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-amber-500">{row.kittenWolf || '-'}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-seer-blue">{row.seer}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-doctor-green">{row.doctor}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-moon-gold">{row.gunner || '-'}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-moon-gold">{row.detective || '-'}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-foreground">{row.villagers}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -111,6 +113,10 @@ function GameGuide() {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Wolves</span>
                     <span className="font-bold text-wolf-red">{row.wolves}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Kitten</span>
+                    <span className="font-bold text-amber-500">{row.kittenWolf || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Seer</span>
