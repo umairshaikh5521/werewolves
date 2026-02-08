@@ -86,7 +86,7 @@ export const joinGame = mutation({
       .withIndex('by_game', (q) => q.eq('gameId', game._id))
       .collect()
 
-    if (players.length >= 8) {
+    if (players.length >= 12) {
       throw new Error('Game is full')
     }
 

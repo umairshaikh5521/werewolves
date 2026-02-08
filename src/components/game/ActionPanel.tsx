@@ -1,5 +1,16 @@
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Crosshair, Eye, ShieldPlus, Vote, Moon, Search } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface ActionPanelProps {
   role: string
@@ -17,6 +28,9 @@ interface ActionPanelProps {
   onInvestigate?: () => void
   lastProtectedId?: string
   selectedPlayerId2?: string
+  hasBitten?: boolean
+  onConvert?: () => void
+  hasConverted?: boolean
 }
 
 export function ActionPanel({
@@ -32,7 +46,11 @@ export function ActionPanel({
   onShoot,
   selectedPlayerName2,
   onInvestigate,
+  hasBitten,
+  onConvert,
+  hasConverted,
 }: ActionPanelProps) {
+  const [showBiteConfirm, setShowBiteConfirm] = useState(false)
   if (!isAlive) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-8">
@@ -61,6 +79,106 @@ export function ActionPanel({
           hasActed={hasActed}
           actedMessage="Kill vote submitted"
         />
+      )
+    }
+
+    if (role === 'kittenWolf') {
+      const canBite = !hasBitten && !hasConverted
+
+      return (
+        <div className="flex flex-col items-center gap-4 p-4">
+          <div className="flex items-center gap-2 text-amber-500">
+            <FangIcon className="h-5 w-5" />
+            <span className="font-display text-sm font-semibold">Kitten Wolf</span>
+          </div>
+
+          {hasConverted ? (
+            <div className="animate-bounce-in rounded-xl bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-500">
+              Bite submitted - target will be converted
+            </div>
+          ) : hasActed ? (
+            <div className="animate-bounce-in rounded-xl bg-village-green/20 px-4 py-2 text-sm font-semibold text-village-green">
+              Kill vote submitted
+            </div>
+          ) : (
+            <>
+              <p className="text-center text-xs text-muted-foreground">
+                {canBite
+                  ? 'Choose to kill or use your one-time bite to convert a villager'
+                  : 'Your bite ability has been used. Vote to kill.'}
+              </p>
+
+              <div className="flex w-full max-w-xs flex-col gap-2">
+                <button
+                  onClick={onAction}
+                  disabled={!selectedPlayerName}
+                  className={cn(
+                    'game-btn w-full py-3 text-sm font-semibold disabled:opacity-40',
+                    'bg-wolf-red hover:bg-wolf-red/90 text-white'
+                  )}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <Crosshair className="h-4 w-4" />
+                    {selectedPlayerName ? `Kill ${selectedPlayerName}` : 'Select a target'}
+                  </span>
+                </button>
+
+                {canBite && (
+                  <button
+                    onClick={() => setShowBiteConfirm(true)}
+                    disabled={!selectedPlayerName}
+                    className={cn(
+                      'game-btn w-full py-3 text-sm font-semibold disabled:opacity-40',
+                      'bg-amber-500 hover:bg-amber-500/90 text-white',
+                      'border-2 border-amber-400/50'
+                    )}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <FangIcon className="h-4 w-4" />
+                      {selectedPlayerName ? `Bite ${selectedPlayerName}` : 'Select a target'}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {canBite && (
+                <p className="text-center text-xs text-amber-500/70">
+                  Bite converts a villager to your team (one-time use)
+                </p>
+              )}
+            </>
+          )}
+
+          <AlertDialog open={showBiteConfirm} onOpenChange={setShowBiteConfirm}>
+            <AlertDialogContent className="border-amber-500/30 bg-background">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-amber-500">Confirm Bite</AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <p>
+                    You are about to use your <strong>one-time bite ability</strong> on{' '}
+                    <strong className="text-amber-500">{selectedPlayerName}</strong>.
+                  </p>
+                  <p>
+                    This will convert them to the Werewolf team instead of killing anyone tonight.
+                  </p>
+                  <p className="text-amber-500/80">This ability cannot be undone!</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    onConvert?.()
+                    setShowBiteConfirm(false)
+                  }}
+                  className="bg-amber-500 hover:bg-amber-500/90"
+                >
+                  Bite & Convert
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       )
     }
 
@@ -251,6 +369,16 @@ function GunIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M10 12h12" />
       <path d="M18 8l4 4-4 4" />
       <path d="M14 16v4h-4" />
+    </svg>
+  )
+}
+
+function FangIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2C8 2 4 6 4 10c0 2 1 4 2 5l1 7h10l1-7c1-1 2-3 2-5 0-4-4-8-8-8z" />
+      <path d="M8 10l1 4" />
+      <path d="M16 10l-1 4" />
     </svg>
   )
 }

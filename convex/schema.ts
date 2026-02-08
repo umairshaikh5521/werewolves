@@ -23,6 +23,7 @@ export const gameStatusValidator = v.union(
 
 export const gameRoleValidator = v.union(
   v.literal('wolf'),
+  v.literal('kittenWolf'),
   v.literal('seer'),
   v.literal('doctor'),
   v.literal('gunner'),
@@ -41,7 +42,8 @@ export const actionTypeValidator = v.union(
   v.literal('save'),
   v.literal('scan'),
   v.literal('shoot'),
-  v.literal('investigate')
+  v.literal('investigate'),
+  v.literal('convert')
 )
 
 export const chatChannelValidator = v.union(
@@ -80,7 +82,10 @@ export default defineSchema({
       lastProtectedId: v.optional(v.id('players')),
       bullets: v.optional(v.number()),
       isRevealed: v.optional(v.boolean()),
+      hasBitten: v.optional(v.boolean()),
     })),
+    wasConverted: v.optional(v.boolean()),
+    convertedAtTurn: v.optional(v.number()),
   })
     .index('by_game', ['gameId'])
     .index('by_game_user', ['gameId', 'userId']),

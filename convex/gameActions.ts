@@ -26,7 +26,7 @@ export const submitAction = mutation({
 
     if (args.type === 'kill') {
       if (game.phase !== 'night') throw new Error('Can only kill at night')
-      if (actor.role !== 'wolf') throw new Error('Only wolves can kill')
+      if (actor.role !== 'wolf' && actor.role !== 'kittenWolf') throw new Error('Only wolves can kill')
       if (target.team === 'bad') throw new Error('Cannot kill fellow wolf')
     } else if (args.type === 'save') {
       if (game.phase !== 'night') throw new Error('Can only save at night')
@@ -267,5 +267,78 @@ export const getActionsForTurn = query({
         q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber)
       )
       .collect()
+  },
+})
+
+export const convertPlayer = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only convert at night')
+
+    const actor = await ctx.db.get(args.playerId)
+    if (!actor || !actor.isAlive) throw new Error('Player is not alive')
+    if (actor.role !== 'kittenWolf') throw new Error('Only Kitten Wolf can convert')
+    if (actor.roleData?.hasBitten) throw new Error('Bite ability already used')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target || !target.isAlive) throw new Error('Target is not alive')
+    if (target.team === 'bad') throw new Error('Cannot convert fellow wolves')
+
+    await ctx.db.patch(actor._id, {
+      roleData: {
+        ...actor.roleData,
+        hasBitten: true,
+      },
+    })
+
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const existingConvert = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'convert'
+    )
+
+    if (existingConvert) {
+      await ctx.db.patch(existingConvert._id, { targetId: args.targetId })
+      return existingConvert._id
+    }
+
+    const killActions = existingActions.filter(
+      (a) => a.actorId === args.playerId && a.type === 'kill'
+    )
+    for (const killAction of killActions) {
+      await ctx.db.delete(killAction._id)
+    }
+
+    return await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'convert',
+      actorId: args.playerId,
+      targetId: args.targetId,
+    })
+  },
+})
+
+export const getConversionStatus = query({
+  args: { gameId: v.id('games'), playerId: v.id('players') },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get(args.playerId)
+    if (!player) return null
+    return {
+      wasConverted: player.wasConverted || false,
+      convertedAtTurn: player.convertedAtTurn,
+    }
   },
 })

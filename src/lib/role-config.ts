@@ -22,6 +22,17 @@ export const roleConfig: Record<string, RoleInfo> = {
     team: 'evil',
     ability: 'Each night, the werewolves collectively choose one player to eliminate. During the day, they must blend in with the villagers and avoid suspicion. If multiple wolves are alive, they must agree on the same target.',
   },
+  kittenWolf: {
+    color: 'text-amber-500',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    title: 'Kitten Wolf',
+    description: 'A young werewolf with a special gift. Once per game, bite a villager to convert them to your pack.',
+    btnColor: 'bg-amber-500 hover:bg-amber-500/90',
+    image: '/werewolf-photoroom.png',
+    team: 'evil',
+    ability: 'During the night, you can choose to use your Bite ability instead of voting to kill. The bitten player loses their role and becomes a Werewolf, joining your team. You can only use this ability ONCE per game. When you bite, no kill happens that night. Choose wisely - converting a powerful role like the Seer can swing the game in your favor.',
+  },
   seer: {
     color: 'text-seer-blue',
     bg: 'bg-seer-blue/10',

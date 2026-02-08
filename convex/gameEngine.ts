@@ -3,11 +3,12 @@ import { mutation, internalMutation } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 
-type GameRole = 'wolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'villager'
+type GameRole = 'wolf' | 'kittenWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'villager'
 type Team = 'good' | 'bad'
 
 interface RoleDist {
   wolves: number
+  kittenWolf: number
   seer: number
   doctor: number
   gunner: number
@@ -16,10 +17,14 @@ interface RoleDist {
 }
 
 const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
-  5: { wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
-  6: { wolves: 1, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  7: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  8: { wolves: 2, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+  5: { wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
+  6: { wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  7: { wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
+  8: { wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+  9: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
+  10: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
+  11: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
+  12: { wolves: 3, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
 }
 
 const NIGHT_DURATION = 30_000
@@ -41,6 +46,9 @@ function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: Gam
 
   for (let i = 0; i < dist.wolves; i++) {
     roles.push({ role: 'wolf', team: 'bad' })
+  }
+  for (let i = 0; i < dist.kittenWolf; i++) {
+    roles.push({ role: 'kittenWolf', team: 'bad' })
   }
   for (let i = 0; i < dist.seer; i++) {
     roles.push({ role: 'seer', team: 'good' })
@@ -72,6 +80,9 @@ function buildRoleData(role: GameRole) {
   if (role === 'doctor') {
     return {}
   }
+  if (role === 'kittenWolf') {
+    return { hasBitten: false }
+  }
   return undefined
 }
 
@@ -88,8 +99,8 @@ export const startGame = mutation({
       .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
       .collect()
 
-    if (players.length < 5 || players.length > 8) {
-      throw new Error('Need 5-8 players')
+    if (players.length < 5 || players.length > 12) {
+      throw new Error('Need 5-12 players')
     }
 
     const dist = ROLE_DISTRIBUTION[players.length]
@@ -183,7 +194,7 @@ export const transitionPhase = internalMutation({
       .collect()
 
     if (game.phase === 'night') {
-      await resolveNight(ctx, args.gameId, players, actions)
+      await resolveNight(ctx, args.gameId, players, actions, game)
 
       const winner = checkWinCondition(
         await ctx.db
@@ -270,11 +281,13 @@ export const transitionPhase = internalMutation({
 })
 
 async function resolveNight(
-  ctx: { db: any },
+  ctx: { db: any; scheduler: any },
   gameId: Id<'games'>,
   players: any[],
-  actions: any[]
+  actions: any[],
+  game: any
 ) {
+  const convertAction = actions.find((a: any) => a.type === 'convert')
   const killVotes = actions.filter((a: any) => a.type === 'kill')
   const saveActions = actions.filter((a: any) => a.type === 'save')
 
@@ -288,6 +301,38 @@ async function resolveNight(
           lastProtectedId: doctorAction.targetId,
         },
       })
+    }
+  }
+
+  if (convertAction) {
+    const target = players.find((p: any) => p._id === convertAction.targetId)
+    if (target && target.isAlive && target.team === 'good') {
+      await ctx.db.patch(target._id, {
+        role: 'wolf',
+        team: 'bad',
+        roleData: undefined,
+        wasConverted: true,
+        convertedAtTurn: game.turnNumber,
+      })
+
+      await ctx.db.insert('chat', {
+        gameId,
+        senderId: players[0]._id,
+        senderName: 'System',
+        content: 'Strange... the village was quiet last night. No one died.',
+        channel: 'global',
+        timestamp: Date.now(),
+      })
+
+      await ctx.db.insert('chat', {
+        gameId,
+        senderId: target._id,
+        senderName: 'System',
+        content: `${target.name} has joined the wolf pack.`,
+        channel: 'wolves',
+        timestamp: Date.now(),
+      })
+      return
     }
   }
 

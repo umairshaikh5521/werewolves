@@ -35,7 +35,7 @@ function LobbyScreen() {
   const userId = typeof window !== 'undefined' ? getGuestId() : ''
   const isHost = game?.hostId === userId
   const playerCount = players?.length || 0
-  const canStart = playerCount >= 5 && playerCount <= 8
+  const canStart = playerCount >= 5 && playerCount <= 12
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -154,7 +154,7 @@ function LobbyScreen() {
     )
   }
 
-  const emptySlots = Math.max(0, 8 - playerCount)
+  const emptySlots = Math.max(0, 12 - playerCount)
 
   return (
     <div className="stars-bg flex min-h-[100dvh] flex-col px-5 py-6">
@@ -170,7 +170,7 @@ function LobbyScreen() {
         </button>
         <div className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5">
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-xs font-semibold text-foreground">{playerCount}/8</span>
+          <span className="text-xs font-semibold text-foreground">{playerCount}/12</span>
         </div>
       </div>
 

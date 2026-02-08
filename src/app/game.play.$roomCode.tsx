@@ -9,6 +9,7 @@ import { GameChat } from '@/components/game/GameChat'
 import { ActionPanel } from '@/components/game/ActionPanel'
 import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { RoleReveal } from '@/components/game/RoleReveal'
+import { ConversionOverlay } from '@/components/game/ConversionOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { MessageCircle, ChevronUp } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
@@ -48,16 +49,25 @@ function GamePlayScreen() {
   const submitAction = useMutation(api.gameActions.submitAction)
   const shootGun = useMutation(api.gameActions.shootGun)
   const investigatePlayers = useMutation(api.gameActions.investigatePlayers)
+  const convertPlayer = useMutation(api.gameActions.convertPlayer)
   const sendMessage = useMutation(api.gameChat.sendMessage)
   const resetToLobby = useMutation(api.games.resetToLobby)
+
+  const conversionStatus = useQuery(
+    api.gameActions.getConversionStatus,
+    game && myPlayer ? { gameId: game._id, playerId: myPlayer._id } : 'skip'
+  )
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
   const [hasActed, setHasActed] = useState(false)
+  const [hasConverted, setHasConverted] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [showRoleReveal, setShowRoleReveal] = useState(false)
+  const [showConversionOverlay, setShowConversionOverlay] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const roleRevealShown = useRef(false)
+  const conversionShown = useRef(false)
 
   useEffect(() => {
     if (myPlayer?.role && !roleRevealShown.current) {
@@ -67,9 +77,17 @@ function GamePlayScreen() {
   }, [myPlayer?.role])
 
   useEffect(() => {
+    if (conversionStatus?.wasConverted && !conversionShown.current) {
+      conversionShown.current = true
+      setShowConversionOverlay(true)
+    }
+  }, [conversionStatus?.wasConverted])
+
+  useEffect(() => {
     setSelectedPlayerId(null)
     setSelectedPlayerId2(null)
     setHasActed(false)
+    setHasConverted(false)
   }, [game?.phase, game?.turnNumber])
 
   const isDetective = myPlayer?.role === 'detective' && game?.phase === 'night'
@@ -82,7 +100,8 @@ function GamePlayScreen() {
       const target = players?.find((p) => p._id === playerId)
       if (!target || !target.isAlive) return
       if (playerId === myPlayer._id && game.phase !== 'night') return
-      if (game.phase === 'night' && myPlayer.role === 'wolf' && target.team === 'bad') return
+      const isWolfRole = myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf'
+      if (game.phase === 'night' && isWolfRole && target.team === 'bad') return
 
       if (isDetective) {
         if (playerId === myPlayer._id) return
@@ -114,7 +133,7 @@ function GamePlayScreen() {
 
     let actionType: 'kill' | 'save' | 'scan' | 'vote'
     if (game.phase === 'night') {
-      if (myPlayer.role === 'wolf') actionType = 'kill'
+      if (myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf') actionType = 'kill'
       else if (myPlayer.role === 'seer') actionType = 'scan'
       else if (myPlayer.role === 'doctor') actionType = 'save'
       else return
@@ -136,6 +155,23 @@ function GamePlayScreen() {
       // action failed
     }
   }, [game, myPlayer, selectedPlayerId, hasActed, submitAction])
+
+  const handleConvert = useCallback(async () => {
+    if (!game || !myPlayer || !selectedPlayerId || hasConverted) return
+    if (myPlayer.role !== 'kittenWolf') return
+    if (myPlayer.roleData?.hasBitten) return
+
+    try {
+      await convertPlayer({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId: selectedPlayerId,
+      })
+      setHasConverted(true)
+    } catch {
+      // convert failed
+    }
+  }, [game, myPlayer, selectedPlayerId, hasConverted, convertPlayer])
 
   const handleShoot = useCallback(async () => {
     if (!game || !myPlayer || !selectedPlayerId) return
@@ -304,13 +340,14 @@ function GamePlayScreen() {
     )
   }
 
+  const isWolfTeam = myPlayer.team === 'bad'
   const chatDisabled =
-    (game.phase === 'night' && myPlayer.role !== 'wolf' && myPlayer.isAlive) ||
+    (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive) ||
     false
 
   const currentChannel: 'global' | 'wolves' | 'dead' = !myPlayer.isAlive
     ? 'dead'
-    : game.phase === 'night' && myPlayer.role === 'wolf'
+    : game.phase === 'night' && isWolfTeam
       ? 'wolves'
       : 'global'
 
@@ -379,6 +416,9 @@ function GamePlayScreen() {
             onInvestigate={handleInvestigate}
             lastProtectedId={myPlayer.roleData?.lastProtectedId}
             selectedPlayerId2={selectedPlayerId2 || undefined}
+            hasBitten={myPlayer.roleData?.hasBitten}
+            onConvert={handleConvert}
+            hasConverted={hasConverted}
           />
         </div>
 
@@ -456,6 +496,10 @@ function GamePlayScreen() {
           skipReveal={roleRevealShown.current}
         />
       )}
+
+      {showConversionOverlay && (
+        <ConversionOverlay onDismiss={() => setShowConversionOverlay(false)} />
+      )}
     </div>
   )
 }
@@ -463,6 +507,7 @@ function GamePlayScreen() {
 function RoleBadge({ role, bullets }: { role: string; bullets?: number }) {
   const config: Record<string, { bg: string; text: string; icon: string }> = {
     wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
+    kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾' },
     seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
     doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
     gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
