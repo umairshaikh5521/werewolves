@@ -452,6 +452,7 @@ function GamePlayScreen() {
                     ? 'Graveyard chat...'
                     : 'Message the village...'
               }
+              playerNames={players?.map((p) => p.name) ?? []}
             />
           </div>
         </div>
@@ -485,6 +486,7 @@ function GamePlayScreen() {
                     ? 'Graveyard chat...'
                     : 'Message the village...'
               }
+              playerNames={players?.map((p) => p.name) ?? []}
             />
           </div>
         </SheetContent>

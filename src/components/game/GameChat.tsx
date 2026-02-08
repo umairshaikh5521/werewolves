@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { playerNameColors } from '@/lib/role-config'
+import { getPlayerColor } from '@/lib/role-config'
 
 interface Message {
   _id: string
@@ -18,16 +18,7 @@ interface GameChatProps {
   currentChannel: 'global' | 'wolves' | 'dead'
   disabled?: boolean
   placeholder?: string
-}
-
-function getNameColor(name: string): string {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-    hash = hash & hash
-  }
-  const index = Math.abs(hash) % playerNameColors.length
-  return playerNameColors[index]
+  playerNames?: string[]
 }
 
 const channelBadges: Record<string, { bg: string; text: string; label: string }> = {
@@ -42,9 +33,18 @@ export function GameChat({
   currentChannel,
   disabled,
   placeholder = 'Type a message...',
+  playerNames = [],
 }: GameChatProps) {
   const [input, setInput] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const nameToColorIndex = useMemo(() => {
+    const map = new Map<string, number>()
+    playerNames.forEach((name, index) => {
+      map.set(name, index)
+    })
+    return map
+  }, [playerNames])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -87,7 +87,7 @@ export function GameChat({
                 <p className="text-xs font-semibold text-primary">{msg.content}</p>
               ) : (
                 <>
-                  <span className={cn('text-xs font-bold', getNameColor(msg.senderName))}>
+                  <span className={cn('text-xs font-bold', getPlayerColor(nameToColorIndex.get(msg.senderName) ?? 0))}>
                     {msg.senderName}
                   </span>
                   {msg.channel !== 'global' && (
