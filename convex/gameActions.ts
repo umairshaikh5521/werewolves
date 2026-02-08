@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { internal } from './_generated/api'
 import { checkWinCondition } from './gameEngine'
 
 export const submitAction = mutation({
@@ -54,10 +55,15 @@ export const submitAction = mutation({
     )
     if (duplicate) {
       await ctx.db.patch(duplicate._id, { targetId: args.targetId })
+
+      if (args.type === 'vote' && game.phase === 'voting') {
+        await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, existingAction)
+      }
+
       return duplicate._id
     }
 
-    return await ctx.db.insert('actions', {
+    const actionId = await ctx.db.insert('actions', {
       gameId: args.gameId,
       turnNumber: game.turnNumber,
       phase: game.phase,
@@ -65,8 +71,42 @@ export const submitAction = mutation({
       actorId: args.playerId,
       targetId: args.targetId,
     })
+
+    if (args.type === 'vote' && game.phase === 'voting') {
+      await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, [...existingAction, {
+        _id: actionId,
+        gameId: args.gameId,
+        turnNumber: game.turnNumber,
+        phase: game.phase,
+        type: args.type,
+        actorId: args.playerId,
+        targetId: args.targetId,
+      }])
+    }
+
+    return actionId
   },
 })
+
+async function checkAndTriggerEarlyVotingEnd(ctx: any, gameId: any, game: any, actions: any[]) {
+  const players = await ctx.db
+    .query('players')
+    .withIndex('by_game', (q: any) => q.eq('gameId', gameId))
+    .collect()
+
+  const alivePlayers = players.filter((p: any) => p.isAlive)
+  const votes = actions.filter((a: any) => a.type === 'vote' && a.phase === 'voting')
+
+  const uniqueVoters = new Set(votes.map((v: any) => v.actorId.toString()))
+
+  if (uniqueVoters.size === alivePlayers.length) {
+    await ctx.scheduler.runAfter(0, internal.gameEngine.transitionPhase, {
+      gameId,
+      expectedTurn: game.turnNumber,
+      expectedPhase: 'voting',
+    })
+  }
+}
 
 export const shootGun = mutation({
   args: {
