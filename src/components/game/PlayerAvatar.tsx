@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { Skull, Crown, User, Check } from 'lucide-react'
+import { Skull, Crown, User, Check, X } from 'lucide-react'
 import { getPlayerColor } from '@/lib/role-config'
 
 interface PlayerAvatarProps {
@@ -77,9 +77,18 @@ export function PlayerAvatar({
         <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
       )}
 
-      {showReadyStatus && (isReady || isHost) && (
-        <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
-          <Check className="h-3 w-3 text-white" />
+      {showReadyStatus && (
+        <div
+          className={cn(
+            'absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full',
+            isReady || isHost ? 'bg-green-500' : 'bg-red-500'
+          )}
+        >
+          {isReady || isHost ? (
+            <Check className="h-3 w-3 text-white" />
+          ) : (
+            <X className="h-3 w-3 text-white" />
+          )}
         </div>
       )}
 
