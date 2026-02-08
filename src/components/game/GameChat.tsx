@@ -8,14 +8,14 @@ interface Message {
   _id: string
   senderName: string
   content: string
-  channel: 'global' | 'wolves' | 'dead'
+  channel: 'global' | 'wolves'
   timestamp: number
 }
 
 interface GameChatProps {
   messages: Message[]
   onSend: (content: string) => void
-  currentChannel: 'global' | 'wolves' | 'dead'
+  currentChannel: 'global' | 'wolves'
   disabled?: boolean
   placeholder?: string
   playerNames?: string[]
@@ -24,7 +24,6 @@ interface GameChatProps {
 const channelBadges: Record<string, { bg: string; text: string; label: string }> = {
   global: { bg: 'bg-secondary', text: 'text-secondary-foreground', label: 'Global' },
   wolves: { bg: 'bg-wolf-red/20', text: 'text-wolf-red', label: 'Wolves' },
-  dead: { bg: 'bg-dead-gray/20', text: 'text-dead-gray', label: 'Dead' },
 }
 
 export function GameChat({

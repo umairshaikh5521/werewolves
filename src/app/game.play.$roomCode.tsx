@@ -351,12 +351,11 @@ function GamePlayScreen() {
 
   const isWolfTeam = myPlayer.team === 'bad'
   const chatDisabled =
-    (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive) ||
-    false
+    !myPlayer.isAlive ||
+    (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive)
 
-  const currentChannel: 'global' | 'wolves' | 'dead' = !myPlayer.isAlive
-    ? 'dead'
-    : game.phase === 'night' && isWolfTeam
+  const currentChannel: 'global' | 'wolves' =
+    isWolfTeam && (game.phase === 'night' || !myPlayer.isAlive)
       ? 'wolves'
       : 'global'
 
@@ -448,7 +447,7 @@ function GamePlayScreen() {
             <div className="flex items-center gap-2">
               <MessageCircle className="h-3.5 w-3.5" />
               <span className="font-display font-semibold">
-                {currentChannel === 'wolves' ? 'Wolf Chat' : currentChannel === 'dead' ? 'Graveyard' : 'Chat'}
+                {currentChannel === 'wolves' ? 'Wolf Chat' : 'Chat'}
               </span>
               {currentChannel === 'wolves' && (
                 <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
@@ -465,9 +464,7 @@ function GamePlayScreen() {
               placeholder={
                 currentChannel === 'wolves'
                   ? 'Wolf chat...'
-                  : currentChannel === 'dead'
-                    ? 'Graveyard chat...'
-                    : 'Message the village...'
+                  : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
@@ -484,7 +481,7 @@ function GamePlayScreen() {
           <SheetHeader className="shrink-0 border-b border-border px-4 py-3">
             <SheetTitle className="flex items-center gap-2 font-display text-sm">
               <MessageCircle className="h-4 w-4" />
-              {currentChannel === 'wolves' ? 'Wolf Chat' : currentChannel === 'dead' ? 'Graveyard' : 'Village Chat'}
+              {currentChannel === 'wolves' ? 'Wolf Chat' : 'Village Chat'}
               {currentChannel === 'wolves' && (
                 <span className="h-2 w-2 rounded-full bg-wolf-red animate-pulse" />
               )}
@@ -499,9 +496,7 @@ function GamePlayScreen() {
               placeholder={
                 currentChannel === 'wolves'
                   ? 'Wolf chat...'
-                  : currentChannel === 'dead'
-                    ? 'Graveyard chat...'
-                    : 'Message the village...'
+                  : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />

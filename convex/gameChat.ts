@@ -6,7 +6,7 @@ export const sendMessage = mutation({
     gameId: v.id('games'),
     playerId: v.id('players'),
     content: v.string(),
-    channel: v.union(v.literal('global'), v.literal('wolves'), v.literal('dead')),
+    channel: v.union(v.literal('global'), v.literal('wolves')),
   },
   handler: async (ctx, args) => {
     const game = await ctx.db.get(args.gameId)
@@ -15,14 +15,13 @@ export const sendMessage = mutation({
     const player = await ctx.db.get(args.playerId)
     if (!player) throw new Error('Player not found')
 
+    if (!player.isAlive) throw new Error('Dead players cannot send messages')
+
     if (args.channel === 'global') {
-      if (!player.isAlive) throw new Error('Dead players cannot use global chat')
       if (game.phase === 'night') throw new Error('Cannot chat during night')
     } else if (args.channel === 'wolves') {
       if (game.phase !== 'night') throw new Error('Wolf chat only during night')
-      if (player.role !== 'wolf') throw new Error('Only wolves can use wolf chat')
-    } else if (args.channel === 'dead') {
-      if (player.isAlive) throw new Error('Only dead players can use dead chat')
+      if (player.role !== 'wolf' && player.role !== 'kittenWolf') throw new Error('Only wolves can use wolf chat')
     }
 
     return await ctx.db.insert('chat', {
@@ -50,10 +49,11 @@ export const getMessages = query({
       .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
       .collect()
 
+    const isWolfTeam = player.role === 'wolf' || player.role === 'kittenWolf'
+
     return allMessages.filter((msg) => {
       if (msg.channel === 'global') return true
-      if (msg.channel === 'wolves' && player.role === 'wolf') return true
-      if (msg.channel === 'dead' && !player.isAlive) return true
+      if (msg.channel === 'wolves' && isWolfTeam) return true
       return false
     })
   },

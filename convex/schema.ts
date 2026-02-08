@@ -48,8 +48,7 @@ export const actionTypeValidator = v.union(
 
 export const chatChannelValidator = v.union(
   v.literal('global'),
-  v.literal('wolves'),
-  v.literal('dead')
+  v.literal('wolves')
 )
 
 export default defineSchema({

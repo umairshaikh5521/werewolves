@@ -60,7 +60,7 @@ export function ActionPanel({
         <p className="font-display text-sm font-semibold text-dead-gray">
           You have been eliminated
         </p>
-        <p className="text-xs text-muted-foreground">Watch from the graveyard chat</p>
+        <p className="text-xs text-muted-foreground">Watch your team's chat</p>
       </div>
     )
   }
