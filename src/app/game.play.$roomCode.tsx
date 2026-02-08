@@ -57,6 +57,10 @@ function GamePlayScreen() {
     api.gameActions.getConversionStatus,
     game && myPlayer ? { gameId: game._id, playerId: myPlayer._id } : 'skip'
   )
+  const voters = useQuery(
+    api.gameActions.getVotersThisTurn,
+    game && game.phase === 'voting' ? { gameId: game._id, turnNumber: game.turnNumber } : 'skip'
+  )
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
@@ -379,6 +383,7 @@ function GamePlayScreen() {
           {players.map((player, index) => {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
+            const hasVoted = game.phase === 'voting' && voters?.includes(player._id)
             return (
               <PlayerAvatar
                 key={player._id}
@@ -387,6 +392,7 @@ function GamePlayScreen() {
                 isHost={player.isHost}
                 isSelected={selectedPlayerId === player._id || isSecondSelected}
                 isCurrentPlayer={player._id === myPlayer._id}
+                hasVoted={hasVoted}
                 role={isRevealed ? player.role ?? undefined : undefined}
                 showRole={!!isRevealed}
                 onClick={

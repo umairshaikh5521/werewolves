@@ -342,3 +342,18 @@ export const getConversionStatus = query({
     }
   },
 })
+
+export const getVotersThisTurn = query({
+  args: { gameId: v.id('games'), turnNumber: v.number() },
+  handler: async (ctx, args) => {
+    const actions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber)
+      )
+      .collect()
+
+    const voteActions = actions.filter((a) => a.type === 'vote' && a.phase === 'voting')
+    return voteActions.map((a) => a.actorId)
+  },
+})

@@ -10,6 +10,7 @@ interface PlayerAvatarProps {
   isCurrentPlayer?: boolean
   isReady?: boolean
   showReadyStatus?: boolean
+  hasVoted?: boolean
   role?: string
   showRole?: boolean
   onClick?: () => void
@@ -45,6 +46,7 @@ export function PlayerAvatar({
   isCurrentPlayer,
   isReady,
   showReadyStatus,
+  hasVoted,
   role,
   showRole,
   onClick,
@@ -76,6 +78,12 @@ export function PlayerAvatar({
       )}
 
       {showReadyStatus && (isReady || isHost) && (
+        <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
+          <Check className="h-3 w-3 text-white" />
+        </div>
+      )}
+
+      {hasVoted && (
         <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
           <Check className="h-3 w-3 text-white" />
         </div>
