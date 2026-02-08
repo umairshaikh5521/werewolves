@@ -383,7 +383,7 @@ function GamePlayScreen() {
           {players.map((player, index) => {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
-            const hasVoted = game.phase === 'voting' && voters?.includes(player._id)
+            const hasVoted = game.phase === 'voting' && voters?.some((id) => id === player._id)
             return (
               <PlayerAvatar
                 key={player._id}
