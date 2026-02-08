@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Skull, Crown, User } from 'lucide-react'
+import { getPlayerColor } from '@/lib/role-config'
 
 interface PlayerAvatarProps {
   name: string
@@ -11,10 +12,12 @@ interface PlayerAvatarProps {
   showRole?: boolean
   onClick?: () => void
   size?: 'sm' | 'md' | 'lg'
+  playerIndex?: number
 }
 
 const roleColors: Record<string, string> = {
   wolf: 'bg-wolf-red/20 border-wolf-red',
+  kittenWolf: 'bg-amber-500/20 border-amber-500',
   seer: 'bg-seer-blue/20 border-seer-blue',
   doctor: 'bg-doctor-green/20 border-doctor-green',
   gunner: 'bg-moon-gold/20 border-moon-gold',
@@ -24,6 +27,7 @@ const roleColors: Record<string, string> = {
 
 const roleIcons: Record<string, string> = {
   wolf: '🐺',
+  kittenWolf: '🐱',
   seer: '🔮',
   doctor: '💊',
   gunner: '🔫',
@@ -41,6 +45,7 @@ export function PlayerAvatar({
   showRole,
   onClick,
   size = 'md',
+  playerIndex = 0,
 }: PlayerAvatarProps) {
   const sizeClasses = {
     sm: 'w-16 h-20',
@@ -91,7 +96,7 @@ export function PlayerAvatar({
           isCurrentPlayer && isAlive
             ? 'text-moon-gold'
             : isAlive
-              ? 'text-foreground'
+              ? getPlayerColor(playerIndex)
               : 'text-dead-gray line-through'
         )}
       >

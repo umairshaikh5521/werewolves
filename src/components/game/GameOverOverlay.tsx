@@ -62,7 +62,7 @@ export function GameOverOverlay({
             Role Reveal
           </p>
           <div className="grid grid-cols-4 gap-2">
-            {players.map((player) => (
+            {players.map((player, index) => (
               <PlayerAvatar
                 key={player._id}
                 name={player.name}
@@ -70,6 +70,7 @@ export function GameOverOverlay({
                 role={player.role}
                 showRole
                 size="sm"
+                playerIndex={index}
               />
             ))}
           </div>

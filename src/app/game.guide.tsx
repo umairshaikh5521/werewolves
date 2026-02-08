@@ -5,7 +5,7 @@ import { roleConfig } from '@/lib/role-config'
 
 export const Route = createFileRoute('/game/guide')({ component: GameGuide })
 
-const roleOrder = ['wolf', 'seer', 'doctor', 'gunner', 'detective', 'villager'] as const
+const roleOrder = ['wolf', 'kittenWolf', 'seer', 'doctor', 'gunner', 'detective', 'villager'] as const
 
 const roleDistribution = [
   { players: 5, wolves: 1, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },

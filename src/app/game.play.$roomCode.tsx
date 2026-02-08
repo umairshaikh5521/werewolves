@@ -371,7 +371,7 @@ function GamePlayScreen() {
 
       <div className="shrink-0 px-4 py-2">
         <div className="flex flex-wrap justify-center gap-2">
-          {players.map((player) => {
+          {players.map((player, index) => {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
             return (
@@ -392,6 +392,7 @@ function GamePlayScreen() {
                       : undefined
                 }
                 size="sm"
+                playerIndex={index}
               />
             )
           })}

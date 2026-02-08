@@ -187,6 +187,7 @@ function LobbyScreen() {
                   isHost={player.isHost}
                   isCurrentPlayer={player.userId === userId}
                   size="md"
+                  playerIndex={i}
                 />
                 {isHost && !player.isHost && (
                   <button

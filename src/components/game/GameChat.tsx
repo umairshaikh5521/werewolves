@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { playerNameColors } from '@/lib/role-config'
 
 interface Message {
   _id: string
@@ -19,10 +20,14 @@ interface GameChatProps {
   placeholder?: string
 }
 
-const channelColors: Record<string, string> = {
-  global: 'text-foreground',
-  wolves: 'text-wolf-red',
-  dead: 'text-dead-gray',
+function getNameColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    hash = hash & hash
+  }
+  const index = Math.abs(hash) % playerNameColors.length
+  return playerNameColors[index]
 }
 
 const channelBadges: Record<string, { bg: string; text: string; label: string }> = {
@@ -82,7 +87,7 @@ export function GameChat({
                 <p className="text-xs font-semibold text-primary">{msg.content}</p>
               ) : (
                 <>
-                  <span className={cn('text-xs font-bold', channelColors[msg.channel])}>
+                  <span className={cn('text-xs font-bold', getNameColor(msg.senderName))}>
                     {msg.senderName}
                   </span>
                   {msg.channel !== 'global' && (

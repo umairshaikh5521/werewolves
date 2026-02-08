@@ -10,6 +10,25 @@ export interface RoleInfo {
   ability: string
 }
 
+export const playerNameColors = [
+  'text-cyan-400',
+  'text-rose-400',
+  'text-lime-400',
+  'text-amber-400',
+  'text-sky-400',
+  'text-pink-400',
+  'text-teal-400',
+  'text-orange-400',
+  'text-emerald-400',
+  'text-fuchsia-400',
+  'text-yellow-400',
+  'text-blue-400',
+] as const
+
+export function getPlayerColor(index: number): string {
+  return playerNameColors[index % playerNameColors.length]
+}
+
 export const roleConfig: Record<string, RoleInfo> = {
   wolf: {
     color: 'text-wolf-red',
@@ -29,9 +48,9 @@ export const roleConfig: Record<string, RoleInfo> = {
     title: 'Kitten Wolf',
     description: 'A young werewolf with a special gift. Once per game, bite a villager to convert them to your pack.',
     btnColor: 'bg-amber-500 hover:bg-amber-500/90',
-    image: '/werewolf-photoroom.png',
+    image: '/kitten-wolf.png',
     team: 'evil',
-    ability: 'During the night, you can choose to use your Bite ability instead of voting to kill. The bitten player loses their role and becomes a Werewolf, joining your team. You can only use this ability ONCE per game. When you bite, no kill happens that night. Choose wisely - converting a powerful role like the Seer can swing the game in your favor.',
+    ability: 'During the night, you can choose to use your Bite ability instead of voting to kill. The bitten player loses their role and becomes a Werewolf, joining your team. You can only use this ability ONCE per game. When you bite, no kill happens that night. After using your bite, you become a regular Werewolf. Choose wisely - converting a powerful role like the Seer can swing the game in your favor.',
   },
   seer: {
     color: 'text-seer-blue',
