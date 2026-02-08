@@ -86,6 +86,7 @@ export default defineSchema({
     })),
     wasConverted: v.optional(v.boolean()),
     convertedAtTurn: v.optional(v.number()),
+    isReady: v.optional(v.boolean()),
   })
     .index('by_game', ['gameId'])
     .index('by_game_user', ['gameId', 'userId']),

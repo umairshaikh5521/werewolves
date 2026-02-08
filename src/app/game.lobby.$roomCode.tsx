@@ -6,7 +6,7 @@ import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
 import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { RoomCodeDisplay } from '@/components/game/RoomCodeDisplay'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
-import { ArrowLeft, Users, X } from 'lucide-react'
+import { ArrowLeft, Users, X, Check } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/lobby/$roomCode')({
@@ -20,6 +20,7 @@ function LobbyScreen() {
   const leaveGameMutation = useMutation(api.games.leaveGame)
   const joinGameMutation = useMutation(api.games.joinGame)
   const kickPlayerMutation = useMutation(api.games.kickPlayer)
+  const toggleReadyMutation = useMutation(api.games.toggleReady)
 
   const game = useQuery(api.games.getGameByCode, { roomCode: roomCode.toUpperCase() })
   const players = useQuery(
@@ -35,7 +36,10 @@ function LobbyScreen() {
   const userId = typeof window !== 'undefined' ? getGuestId() : ''
   const isHost = game?.hostId === userId
   const playerCount = players?.length || 0
-  const canStart = playerCount >= 5 && playerCount <= 12
+  const currentPlayer = players?.find((p) => p.userId === userId)
+  const readyCount = players?.filter((p) => p.isHost || p.isReady).length || 0
+  const allReady = players?.every((p) => p.isHost || p.isReady) ?? false
+  const canStart = playerCount >= 5 && playerCount <= 12 && allReady
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -101,6 +105,14 @@ function LobbyScreen() {
     if (!game) return
     try {
       await kickPlayerMutation({ gameId: game._id, hostUserId: userId, playerId })
+    } catch {
+    }
+  }
+
+  const handleToggleReady = async () => {
+    if (!game || !currentPlayer) return
+    try {
+      await toggleReadyMutation({ gameId: game._id, playerId: currentPlayer._id })
     } catch {
     }
   }
@@ -186,6 +198,8 @@ function LobbyScreen() {
                   isAlive
                   isHost={player.isHost}
                   isCurrentPlayer={player.userId === userId}
+                  isReady={player.isReady ?? false}
+                  showReadyStatus
                   size="md"
                   playerIndex={i}
                 />
@@ -222,6 +236,12 @@ function LobbyScreen() {
 
         {isHost ? (
           <div className="flex flex-col items-center gap-2">
+            <div className="mb-2 flex items-center gap-2 rounded-full bg-secondary px-4 py-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium text-foreground">
+                {readyCount}/{playerCount} Ready
+              </span>
+            </div>
             <button
               onClick={handleStart}
               disabled={!canStart || isStarting}
@@ -229,14 +249,36 @@ function LobbyScreen() {
             >
               {isStarting ? 'Starting...' : 'Start Game'}
             </button>
-            {!canStart && (
+            {playerCount < 5 && (
               <p className="text-xs text-muted-foreground">
                 Need at least 5 players ({5 - playerCount} more)
               </p>
             )}
+            {playerCount >= 5 && !allReady && (
+              <p className="text-xs text-muted-foreground">
+                Waiting for all players to ready up
+              </p>
+            )}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={handleToggleReady}
+              className={`game-btn w-full max-w-sm py-4 text-lg transition-all ${
+                currentPlayer?.isReady
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-secondary text-foreground hover:bg-secondary/80'
+              }`}
+            >
+              {currentPlayer?.isReady ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="h-5 w-5" />
+                  Ready
+                </span>
+              ) : (
+                'Click to Ready Up'
+              )}
+            </button>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
               <p className="font-body text-sm text-muted-foreground">

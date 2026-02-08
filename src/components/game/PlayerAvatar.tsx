@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { Skull, Crown, User } from 'lucide-react'
+import { Skull, Crown, User, Check } from 'lucide-react'
 import { getPlayerColor } from '@/lib/role-config'
 
 interface PlayerAvatarProps {
@@ -8,6 +8,8 @@ interface PlayerAvatarProps {
   isHost?: boolean
   isSelected?: boolean
   isCurrentPlayer?: boolean
+  isReady?: boolean
+  showReadyStatus?: boolean
   role?: string
   showRole?: boolean
   onClick?: () => void
@@ -41,6 +43,8 @@ export function PlayerAvatar({
   isHost,
   isSelected,
   isCurrentPlayer,
+  isReady,
+  showReadyStatus,
   role,
   showRole,
   onClick,
@@ -69,6 +73,12 @@ export function PlayerAvatar({
     >
       {isHost && (
         <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
+      )}
+
+      {showReadyStatus && (isReady || isHost) && (
+        <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
+          <Check className="h-3 w-3 text-white" />
+        </div>
       )}
 
       <div

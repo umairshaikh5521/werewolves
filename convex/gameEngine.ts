@@ -103,6 +103,11 @@ export const startGame = mutation({
       throw new Error('Need 5-12 players')
     }
 
+    const notReadyPlayers = players.filter((p: any) => !p.isHost && !p.isReady)
+    if (notReadyPlayers.length > 0) {
+      throw new Error('All players must be ready to start')
+    }
+
     const dist = ROLE_DISTRIBUTION[players.length]
     if (!dist) {
       throw new Error(`No role distribution defined for ${players.length} players`)

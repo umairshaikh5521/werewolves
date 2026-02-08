@@ -15,6 +15,7 @@ interface GameOverOverlayProps {
   players: Player[]
   onBackToHome: () => void
   onBackToLobby?: () => void
+  onBackToRoom?: () => void
   isHost?: boolean
   isResetting?: boolean
 }
@@ -24,6 +25,7 @@ export function GameOverOverlay({
   players,
   onBackToHome,
   onBackToLobby,
+  onBackToRoom,
   isHost,
   isResetting,
 }: GameOverOverlayProps) {
@@ -86,19 +88,22 @@ export function GameOverOverlay({
               {isResetting ? 'Returning to Lobby...' : 'Play Again'}
             </button>
           )}
-          {!isHost && (
-            <p className="text-center text-xs text-muted-foreground">
-              Waiting for host to start a new game...
-            </p>
+          {!isHost && onBackToRoom && (
+            <>
+              <button
+                onClick={onBackToRoom}
+                className="game-btn w-full bg-primary py-3.5 text-sm text-primary-foreground hover:bg-primary/90"
+              >
+                Back to Room
+              </button>
+              <p className="text-center text-xs text-muted-foreground">
+                Waiting for host to start a new game...
+              </p>
+            </>
           )}
           <button
             onClick={onBackToHome}
-            className={cn(
-              'game-btn w-full py-3.5 text-sm',
-              isHost
-                ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
-            )}
+            className="game-btn w-full bg-secondary py-3.5 text-sm text-secondary-foreground hover:bg-secondary/80"
           >
             Leave Room
           </button>

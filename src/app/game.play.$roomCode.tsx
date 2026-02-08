@@ -233,6 +233,10 @@ function GamePlayScreen() {
     navigate({ to: '/game' })
   }
 
+  const handleBackToRoom = () => {
+    navigate({ to: '/game/lobby/$roomCode', params: { roomCode } })
+  }
+
   const handleBackToLobby = useCallback(async () => {
     if (!game) return
     setIsResetting(true)
@@ -334,6 +338,7 @@ function GamePlayScreen() {
         players={players}
         onBackToHome={handleBackToHome}
         onBackToLobby={handleBackToLobby}
+        onBackToRoom={handleBackToRoom}
         isHost={myPlayer?.isHost}
         isResetting={isResetting}
       />

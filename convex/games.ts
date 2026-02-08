@@ -96,6 +96,7 @@ export const joinGame = mutation({
       name: args.name,
       isAlive: true,
       isHost: false,
+      isReady: false,
     })
 
     return { gameId: game._id, playerId }
@@ -217,6 +218,7 @@ export const resetToLobby = mutation({
         team: undefined,
         isAlive: true,
         roleData: undefined,
+        isReady: player.isHost ? true : false,
       })
     }
 
@@ -242,6 +244,27 @@ export const resetToLobby = mutation({
       turnNumber: 0,
       phaseEndTime: 0,
       winningTeam: undefined,
+    })
+  },
+})
+
+export const toggleReady = mutation({
+  args: { gameId: v.id('games'), playerId: v.id('players') },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game) throw new Error('Game not found')
+    if (game.status !== 'lobby') throw new Error('Can only toggle ready in lobby')
+
+    const player = await ctx.db.get(args.playerId)
+    if (!player || player.gameId !== args.gameId) {
+      throw new Error('Player not found')
+    }
+    if (player.isHost) {
+      throw new Error('Host is automatically ready')
+    }
+
+    await ctx.db.patch(args.playerId, {
+      isReady: !player.isReady,
     })
   },
 })
