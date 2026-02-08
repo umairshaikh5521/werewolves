@@ -342,25 +342,25 @@ async function resolveNight(
   }
 
   if (killVotes.length > 0) {
-    const voteCounts: Record<string, number> = {}
+    const voteCounts: Map<string, number> = new Map()
     for (const vote of killVotes) {
-      const targetKey = vote.targetId as string
-      voteCounts[targetKey] = (voteCounts[targetKey] || 0) + 1
+      const targetKey = vote.targetId.toString()
+      voteCounts.set(targetKey, (voteCounts.get(targetKey) || 0) + 1)
     }
 
     let maxVotes = 0
-    let targetId: string | null = null
-    for (const [id, count] of Object.entries(voteCounts)) {
+    let targetId: Id<'players'> | null = null
+    for (const [id, count] of voteCounts.entries()) {
       if (count > maxVotes) {
         maxVotes = count
-        targetId = id
+        targetId = id as Id<'players'>
       }
     }
 
     if (targetId) {
-      const wasSaved = saveActions.some((a: any) => (a.targetId as string) === targetId)
+      const wasSaved = saveActions.some((a: any) => a.targetId === targetId)
       if (!wasSaved) {
-        await ctx.db.patch(targetId as Id<'players'>, { isAlive: false })
+        await ctx.db.patch(targetId, { isAlive: false })
 
         await ctx.db.insert('chat', {
           gameId,
@@ -415,18 +415,18 @@ async function resolveVoting(
     return
   }
 
-  const voteCounts: Record<string, number> = {}
+  const voteCounts: Map<string, number> = new Map()
   for (const vote of votes) {
-    const targetKey = vote.targetId as string
-    voteCounts[targetKey] = (voteCounts[targetKey] || 0) + 1
+    const targetKey = vote.targetId.toString()
+    voteCounts.set(targetKey, (voteCounts.get(targetKey) || 0) + 1)
   }
 
   let maxVotes = 0
-  let targetId: string | null = null
-  for (const [id, count] of Object.entries(voteCounts)) {
+  let targetId: Id<'players'> | null = null
+  for (const [id, count] of voteCounts.entries()) {
     if (count > maxVotes) {
       maxVotes = count
-      targetId = id
+      targetId = id as Id<'players'>
     }
   }
 
@@ -434,7 +434,7 @@ async function resolveVoting(
   const majority = Math.floor(alivePlayers.length / 2) + 1
 
   if (targetId && maxVotes >= majority) {
-    await ctx.db.patch(targetId as Id<'players'>, { isAlive: false })
+    await ctx.db.patch(targetId, { isAlive: false })
     const eliminated = players.find((p: any) => p._id === targetId)
     await ctx.db.insert('chat', {
       gameId,
