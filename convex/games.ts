@@ -173,3 +173,75 @@ export const leaveGame = mutation({
     }
   },
 })
+
+export const kickPlayer = mutation({
+  args: {
+    gameId: v.id('games'),
+    hostUserId: v.string(),
+    playerId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game) throw new Error('Game not found')
+    if (game.status !== 'lobby') throw new Error('Can only kick in lobby')
+    if (game.hostId !== args.hostUserId) throw new Error('Only host can kick')
+
+    const player = await ctx.db.get(args.playerId)
+    if (!player || player.gameId !== args.gameId) {
+      throw new Error('Player not found')
+    }
+    if (player.isHost) {
+      throw new Error('Cannot kick the host')
+    }
+
+    await ctx.db.delete(args.playerId)
+  },
+})
+
+export const resetToLobby = mutation({
+  args: { gameId: v.id('games'), userId: v.string() },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game) throw new Error('Game not found')
+    if (game.status !== 'ended') throw new Error('Game not ended')
+    if (game.hostId !== args.userId) throw new Error('Only host can reset')
+
+    const players = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    for (const player of players) {
+      await ctx.db.patch(player._id, {
+        role: undefined,
+        team: undefined,
+        isAlive: true,
+        roleData: undefined,
+      })
+    }
+
+    const actions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) => q.eq('gameId', args.gameId))
+      .collect()
+    for (const action of actions) {
+      await ctx.db.delete(action._id)
+    }
+
+    const chats = await ctx.db
+      .query('chat')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+    for (const chat of chats) {
+      await ctx.db.delete(chat._id)
+    }
+
+    await ctx.db.patch(args.gameId, {
+      status: 'lobby',
+      phase: 'night',
+      turnNumber: 0,
+      phaseEndTime: 0,
+      winningTeam: undefined,
+    })
+  },
+})

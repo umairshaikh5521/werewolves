@@ -14,9 +14,19 @@ interface GameOverOverlayProps {
   winningTeam: string
   players: Player[]
   onBackToHome: () => void
+  onBackToLobby?: () => void
+  isHost?: boolean
+  isResetting?: boolean
 }
 
-export function GameOverOverlay({ winningTeam, players, onBackToHome }: GameOverOverlayProps) {
+export function GameOverOverlay({
+  winningTeam,
+  players,
+  onBackToHome,
+  onBackToLobby,
+  isHost,
+  isResetting,
+}: GameOverOverlayProps) {
   const isVillageWin = winningTeam === 'good'
 
   return (
@@ -65,12 +75,33 @@ export function GameOverOverlay({ winningTeam, players, onBackToHome }: GameOver
           </div>
         </div>
 
-        <button
-          onClick={onBackToHome}
-          className="game-btn w-full bg-primary py-3.5 text-sm text-primary-foreground hover:bg-primary/90"
-        >
-          Back to Home
-        </button>
+        <div className="flex w-full flex-col gap-2">
+          {isHost && onBackToLobby && (
+            <button
+              onClick={onBackToLobby}
+              disabled={isResetting}
+              className="game-btn w-full bg-primary py-3.5 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isResetting ? 'Returning to Lobby...' : 'Play Again'}
+            </button>
+          )}
+          {!isHost && (
+            <p className="text-center text-xs text-muted-foreground">
+              Waiting for host to start a new game...
+            </p>
+          )}
+          <button
+            onClick={onBackToHome}
+            className={cn(
+              'game-btn w-full py-3.5 text-sm',
+              isHost
+                ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            )}
+          >
+            Leave Room
+          </button>
+        </div>
       </div>
     </div>
   )

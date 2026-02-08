@@ -6,7 +6,7 @@ import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
 import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { RoomCodeDisplay } from '@/components/game/RoomCodeDisplay'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
-import { ArrowLeft, Users } from 'lucide-react'
+import { ArrowLeft, Users, X } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/lobby/$roomCode')({
@@ -19,6 +19,7 @@ function LobbyScreen() {
   const startGameMutation = useMutation(api.gameEngine.startGame)
   const leaveGameMutation = useMutation(api.games.leaveGame)
   const joinGameMutation = useMutation(api.games.joinGame)
+  const kickPlayerMutation = useMutation(api.games.kickPlayer)
 
   const game = useQuery(api.games.getGameByCode, { roomCode: roomCode.toUpperCase() })
   const players = useQuery(
@@ -96,6 +97,14 @@ function LobbyScreen() {
     navigate({ to: '/game' })
   }
 
+  const handleKick = async (playerId: Id<'players'>) => {
+    if (!game) return
+    try {
+      await kickPlayerMutation({ gameId: game._id, hostUserId: userId, playerId })
+    } catch {
+    }
+  }
+
   if (game === undefined) {
     return (
       <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4">
@@ -171,7 +180,7 @@ function LobbyScreen() {
         <div className="w-full max-w-sm">
           <div className="grid grid-cols-4 gap-3">
             {players?.map((player, i) => (
-              <div key={player._id} className="animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
+              <div key={player._id} className="animate-slide-up relative" style={{ animationDelay: `${i * 0.05}s` }}>
                 <PlayerAvatar
                   name={player.name}
                   isAlive
@@ -179,6 +188,14 @@ function LobbyScreen() {
                   isCurrentPlayer={player.userId === userId}
                   size="md"
                 />
+                {isHost && !player.isHost && (
+                  <button
+                    onClick={() => handleKick(player._id)}
+                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-transform hover:scale-110"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             ))}
             {Array.from({ length: emptySlots }).map((_, i) => (

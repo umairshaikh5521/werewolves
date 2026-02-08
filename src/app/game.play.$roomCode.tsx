@@ -49,12 +49,14 @@ function GamePlayScreen() {
   const shootGun = useMutation(api.gameActions.shootGun)
   const investigatePlayers = useMutation(api.gameActions.investigatePlayers)
   const sendMessage = useMutation(api.gameChat.sendMessage)
+  const resetToLobby = useMutation(api.games.resetToLobby)
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
   const [hasActed, setHasActed] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [showRoleReveal, setShowRoleReveal] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
   const roleRevealShown = useRef(false)
 
   useEffect(() => {
@@ -195,6 +197,22 @@ function GamePlayScreen() {
     navigate({ to: '/game' })
   }
 
+  const handleBackToLobby = useCallback(async () => {
+    if (!game) return
+    setIsResetting(true)
+    try {
+      await resetToLobby({ gameId: game._id, userId })
+    } catch {
+      setIsResetting(false)
+    }
+  }, [game, userId, resetToLobby])
+
+  useEffect(() => {
+    if (game?.status === 'lobby') {
+      navigate({ to: '/game/lobby/$roomCode', params: { roomCode } })
+    }
+  }, [game?.status, navigate, roomCode])
+
   if (game === undefined || players === undefined) {
     return (
       <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4">
@@ -279,6 +297,9 @@ function GamePlayScreen() {
         winningTeam={game.winningTeam}
         players={players}
         onBackToHome={handleBackToHome}
+        onBackToLobby={handleBackToLobby}
+        isHost={myPlayer?.isHost}
+        isResetting={isResetting}
       />
     )
   }
