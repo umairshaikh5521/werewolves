@@ -61,11 +61,11 @@ export function GameOverOverlay({
           </p>
         </div>
 
-        <div className="w-full space-y-2">
+        <div className="w-full space-y-3">
           <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Role Reveal
           </p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-3">
             {players.map((player, index) => (
               <PlayerAvatar
                 key={player._id}
@@ -73,7 +73,7 @@ export function GameOverOverlay({
                 isAlive={player.isAlive}
                 role={player.role}
                 showRole
-                size="sm"
+                size="md"
                 playerIndex={index}
               />
             ))}

@@ -262,16 +262,19 @@ function GamePlayScreen() {
 
   const handleShoot = useCallback(async () => {
     if (!game || !myPlayer || !selectedPlayerId) return
+
+    // Play sound immediately on trigger
+    playSound('gunshot', 0.7)
+
     try {
       await shootGun({
         gameId: game._id,
         playerId: myPlayer._id,
         targetId: selectedPlayerId,
       })
-      playSound('gunshot', 0.6)
       setSelectedPlayerId(null)
-    } catch {
-      // shoot failed
+    } catch (e) {
+      console.log('[Shoot] Failed:', e)
     }
   }, [game, myPlayer, selectedPlayerId, shootGun])
 

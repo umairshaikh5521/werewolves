@@ -19,7 +19,7 @@ export function CountdownOverlay({
             soundStarted.current = true
             playCountdown(0.6)
         }
-        // asdfasd
+
         const updateTimer = () => {
             const elapsed = (Date.now() - countdownStartTime) / 1000
             const remaining = Math.max(0, Math.ceil(durationSeconds - elapsed))
