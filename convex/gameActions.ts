@@ -434,3 +434,18 @@ export const getGunnerShotStatus = query({
     return { hasShot }
   },
 })
+
+// Query for all clients to detect when a gunshot happens
+export const getShootCount = query({
+  args: { gameId: v.id('games') },
+  handler: async (ctx, args) => {
+    const allActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    const shootActions = allActions.filter((a) => a.type === 'shoot')
+    return { count: shootActions.length }
+  },
+})
+

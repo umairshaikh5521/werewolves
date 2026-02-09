@@ -68,6 +68,11 @@ function GamePlayScreen() {
       ? { gameId: game._id, playerId: myPlayer._id, turnNumber: game.turnNumber }
       : 'skip'
   )
+  // Subscribe to shoot count for all players to hear gunshot
+  const shootCount = useQuery(
+    api.gameActions.getShootCount,
+    game ? { gameId: game._id } : 'skip'
+  )
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
@@ -82,6 +87,23 @@ function GamePlayScreen() {
   const previousPhase = useRef<string | null>(null)
   const gameEndedSoundPlayed = useRef(false)
   const clockRunning = useRef(false)
+  const previousShootCount = useRef<number | null>(null)
+
+  // Play gunshot sound when any player shoots (for all clients)
+  useEffect(() => {
+    if (shootCount?.count === undefined) return
+
+    const currentCount = shootCount.count
+    const prevCount = previousShootCount.current
+
+    // Only play sound when count increases (not on initial load)
+    if (prevCount !== null && currentCount > prevCount) {
+      console.log('[Gunshot] New shoot detected! Playing sound for all players')
+      playSound('gunshot', 0.7)
+    }
+
+    previousShootCount.current = currentCount
+  }, [shootCount?.count])
 
   useEffect(() => {
     if (myPlayer?.role && !roleRevealShown.current) {
@@ -263,15 +285,13 @@ function GamePlayScreen() {
   const handleShoot = useCallback(async () => {
     if (!game || !myPlayer || !selectedPlayerId) return
 
-    // Play sound immediately on trigger
-    playSound('gunshot', 0.7)
-
     try {
       await shootGun({
         gameId: game._id,
         playerId: myPlayer._id,
         targetId: selectedPlayerId,
       })
+      // Sound plays via reactive shootCount subscription for all players
       setSelectedPlayerId(null)
     } catch (e) {
       console.log('[Shoot] Failed:', e)
