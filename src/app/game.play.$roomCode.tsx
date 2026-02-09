@@ -61,6 +61,12 @@ function GamePlayScreen() {
     api.gameActions.getVotersThisTurn,
     game && game.phase === 'voting' ? { gameId: game._id, turnNumber: game.turnNumber } : 'skip'
   )
+  const gunnerShotStatus = useQuery(
+    api.gameActions.getGunnerShotStatus,
+    game && myPlayer && myPlayer.role === 'gunner' && game.phase === 'day'
+      ? { gameId: game._id, playerId: myPlayer._id, turnNumber: game.turnNumber }
+      : 'skip'
+  )
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
@@ -378,8 +384,8 @@ function GamePlayScreen() {
         </div>
       )}
 
-      <div className="shrink-0 px-4 py-2">
-        <div className="flex flex-wrap justify-center gap-2">
+      <div className="shrink-0 px-2 py-2">
+        <div className={`grid gap-1 justify-items-center ${players.length > 10 ? 'grid-cols-6' : 'grid-cols-5'}`}>
           {players.map((player, index) => {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
@@ -407,7 +413,7 @@ function GamePlayScreen() {
                       ? () => handlePlayerSelect(player._id)
                       : undefined
                 }
-                size="sm"
+                size="xs"
                 playerIndex={index}
                 isWolfTeammate={isMyWolfTeammate}
               />
@@ -430,6 +436,7 @@ function GamePlayScreen() {
             detectiveResult={detectiveResult}
             bullets={myPlayer.roleData?.bullets}
             onShoot={handleShoot}
+            hasShot={gunnerShotStatus?.hasShot}
             selectedPlayerName2={selectedPlayer2?.name}
             onInvestigate={handleInvestigate}
             lastProtectedId={myPlayer.roleData?.lastProtectedId}

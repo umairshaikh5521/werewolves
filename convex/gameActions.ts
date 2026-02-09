@@ -130,6 +130,19 @@ export const shootGun = mutation({
     if (!target || !target.isAlive) throw new Error('Target is not alive')
     if (args.targetId === args.playerId) throw new Error('Cannot shoot yourself')
 
+    // Check if gunner has already shot this turn
+    const existingShots = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const hasAlreadyShot = existingShots.some(
+      (a) => a.actorId === args.playerId && a.type === 'shoot'
+    )
+    if (hasAlreadyShot) throw new Error('You can only shoot once per round')
+
     await ctx.db.patch(gunner._id, {
       roleData: {
         ...gunner.roleData,
@@ -402,5 +415,22 @@ export const getVotersThisTurn = query({
 
     const voteActions = actions.filter((a) => a.type === 'vote' && a.phase === 'voting')
     return voteActions.map((a) => a.actorId)
+  },
+})
+
+export const getGunnerShotStatus = query({
+  args: { gameId: v.id('games'), playerId: v.id('players'), turnNumber: v.number() },
+  handler: async (ctx, args) => {
+    const actions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber)
+      )
+      .collect()
+
+    const hasShot = actions.some(
+      (a) => a.actorId === args.playerId && a.type === 'shoot'
+    )
+    return { hasShot }
   },
 })

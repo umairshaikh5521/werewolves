@@ -24,6 +24,7 @@ interface ActionPanelProps {
   detectiveResult?: { target1Name: string; target2Name: string; sameTeam: boolean } | null
   bullets?: number
   onShoot?: () => void
+  hasShot?: boolean
   selectedPlayerName2?: string
   onInvestigate?: () => void
   lastProtectedId?: string
@@ -44,6 +45,7 @@ export function ActionPanel({
   detectiveResult,
   bullets,
   onShoot,
+  hasShot,
   selectedPlayerName2,
   onInvestigate,
   hasBitten,
@@ -317,17 +319,25 @@ export function ActionPanel({
             {bullets} bullet{(bullets ?? 0) !== 1 ? 's' : ''} remaining
           </span>
         </div>
-        <p className="text-xs text-muted-foreground">Select a player and shoot during discussion</p>
-        <button
-          onClick={onShoot}
-          disabled={!selectedPlayerName}
-          className={cn(
-            'game-btn w-full max-w-xs py-3 text-sm font-semibold disabled:opacity-40',
-            'bg-wolf-red hover:bg-wolf-red/90 text-white'
-          )}
-        >
-          {selectedPlayerName ? `Shoot ${selectedPlayerName}` : 'Select a target'}
-        </button>
+        {hasShot ? (
+          <div className="animate-bounce-in rounded-xl bg-wolf-red/20 px-4 py-2 text-sm font-semibold text-wolf-red">
+            Shot fired this round
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">Select a player and shoot during discussion</p>
+            <button
+              onClick={onShoot}
+              disabled={!selectedPlayerName}
+              className={cn(
+                'game-btn w-full max-w-xs py-3 text-sm font-semibold disabled:opacity-40',
+                'bg-wolf-red hover:bg-wolf-red/90 text-white'
+              )}
+            >
+              {selectedPlayerName ? `Shoot ${selectedPlayerName}` : 'Select a target'}
+            </button>
+          </>
+        )}
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { Skull, Crown, User, Check, X } from 'lucide-react'
 import { getPlayerColor } from '@/lib/role-config'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface PlayerAvatarProps {
   name: string
@@ -14,7 +15,7 @@ interface PlayerAvatarProps {
   role?: string
   showRole?: boolean
   onClick?: () => void
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   playerIndex?: number
   isWolfTeammate?: boolean
 }
@@ -56,95 +57,127 @@ export function PlayerAvatar({
   isWolfTeammate = false,
 }: PlayerAvatarProps) {
   const sizeClasses = {
-    sm: 'w-16 h-20',
+    xs: 'w-12 h-16',
+    sm: 'w-14 h-18',
     md: 'w-20 h-24',
     lg: 'w-24 h-28',
   }
 
+  const avatarSizeClasses = {
+    xs: 'h-6 w-6',
+    sm: 'h-7 w-7',
+    md: 'h-8 w-8',
+    lg: 'h-10 w-10',
+  }
+
+  const textSizeClasses = {
+    xs: 'text-[10px]',
+    sm: 'text-[11px]',
+    md: 'text-xs',
+    lg: 'text-sm',
+  }
+
+  const iconSizeClasses = {
+    xs: 'text-xs',
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base',
+  }
+
   return (
-    <button
-      onClick={onClick}
-      disabled={!onClick}
-      className={cn(
-        'relative flex flex-col items-center justify-center gap-1 rounded-2xl border-2 p-2 transition-all',
-        sizeClasses[size],
-        isWolfTeammate && isAlive
-          ? 'border-[#EF4444] bg-[#EF4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-          : isAlive
-            ? 'border-border bg-card'
-            : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
-        isSelected && isAlive && 'border-primary animate-pulse-glow',
-        isCurrentPlayer && isAlive && 'ring-2 ring-moon-gold/40',
-        onClick && isAlive && 'cursor-pointer hover:border-primary/60 active:scale-95',
-        !onClick && 'cursor-default'
-      )}
-    >
-      {isHost && (
-        <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
-      )}
-
-      {isWolfTeammate && isAlive && role && (
-        <div className="absolute -top-1 -left-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#EF4444] border border-white">
-          <span className="text-sm">{role === 'wolf' ? '🐺' : '🐱'}</span>
-        </div>
-      )}
-
-      {showReadyStatus && !isWolfTeammate && (
-        <div
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          disabled={!onClick}
           className={cn(
-            'absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full',
-            isReady || isHost ? 'bg-green-500' : 'bg-red-500'
+            'relative flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 p-1.5 transition-all',
+            sizeClasses[size],
+            isWolfTeammate && isAlive
+              ? 'border-[#EF4444] bg-[#EF4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
+              : isAlive
+                ? 'border-border bg-card'
+                : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
+            isSelected && isAlive && 'border-primary animate-pulse-glow',
+            isCurrentPlayer && isAlive && 'ring-2 ring-moon-gold/40',
+            onClick && isAlive && 'cursor-pointer hover:border-primary/60 active:scale-95',
+            !onClick && 'cursor-default'
           )}
         >
-          {isReady || isHost ? (
-            <Check className="h-3 w-3 text-white" />
-          ) : (
-            <X className="h-3 w-3 text-white" />
+          {isHost && (
+            <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
           )}
-        </div>
-      )}
 
-      {hasVoted && (
-        <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
-          <Check className="h-3 w-3 text-white" />
-        </div>
-      )}
+          {isWolfTeammate && isAlive && role && (
+            <div className="absolute -top-1 -left-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#EF4444] border border-white">
+              <span className="text-sm">{role === 'wolf' ? '🐺' : '🐱'}</span>
+            </div>
+          )}
 
-      <div
-        className={cn(
-          'flex h-8 w-8 items-center justify-center rounded-full border',
-          showRole && role
-            ? roleColors[role]
-            : isAlive
-              ? 'bg-secondary border-border'
-              : 'bg-dead-gray/30 border-dead-gray/50'
-        )}
-      >
-        {showRole && role ? (
-          <span className="text-sm">{roleIcons[role]}</span>
-        ) : !isAlive ? (
-          <Skull className="h-4 w-4 text-dead-gray" />
-        ) : (
-          <User className="h-4 w-4 text-muted-foreground" />
-        )}
-      </div>
+          {showReadyStatus && !isWolfTeammate && (
+            <div
+              className={cn(
+                'absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full',
+                isReady || isHost ? 'bg-green-500' : 'bg-red-500'
+              )}
+            >
+              {isReady || isHost ? (
+                <Check className="h-3 w-3 text-white" />
+              ) : (
+                <X className="h-3 w-3 text-white" />
+              )}
+            </div>
+          )}
 
-      <span
-        className={cn(
-          'max-w-full truncate text-xs font-semibold',
-          isCurrentPlayer && isAlive
-            ? 'text-moon-gold'
-            : isAlive
-              ? getPlayerColor(playerIndex)
-              : 'text-dead-gray line-through'
-        )}
-      >
-        {isCurrentPlayer ? 'YOU' : name}
-      </span>
+          {hasVoted && (
+            <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
+              <Check className="h-3 w-3 text-white" />
+            </div>
+          )}
 
-      {showRole && role && (
-        <span className="text-[10px] capitalize text-muted-foreground">{role}</span>
-      )}
-    </button>
+          <div
+            className={cn(
+              'flex items-center justify-center rounded-full border',
+              avatarSizeClasses[size],
+              showRole && role
+                ? roleColors[role]
+                : isAlive
+                  ? 'bg-secondary border-border'
+                  : 'bg-dead-gray/30 border-dead-gray/50'
+            )}
+          >
+            {showRole && role ? (
+              <span className={iconSizeClasses[size]}>{roleIcons[role]}</span>
+            ) : !isAlive ? (
+              <Skull className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-dead-gray')} />
+            ) : (
+              <User className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-muted-foreground')} />
+            )}
+          </div>
+
+          <span
+            className={cn(
+              'max-w-full truncate font-semibold',
+              textSizeClasses[size],
+              isCurrentPlayer && isAlive
+                ? 'text-moon-gold'
+                : isAlive
+                  ? getPlayerColor(playerIndex)
+                  : 'text-dead-gray line-through'
+            )}
+          >
+            {isCurrentPlayer ? 'YOU' : name}
+          </span>
+
+          {showRole && role && (
+            <span className={cn('capitalize text-muted-foreground', size === 'xs' ? 'text-[8px]' : 'text-[10px]')}>{role}</span>
+          )}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={4}>
+        <span className="font-semibold">{name}</span>
+        {showRole && role && <span className="ml-1 capitalize text-muted-foreground">({role})</span>}
+      </TooltipContent>
+    </Tooltip>
   )
 }
