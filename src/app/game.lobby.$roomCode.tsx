@@ -6,6 +6,7 @@ import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
 import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { RoomCodeDisplay } from '@/components/game/RoomCodeDisplay'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
+import { CountdownOverlay } from '@/components/game/CountdownOverlay'
 import { ArrowLeft, Users, X, Check } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/game/lobby/$roomCode')({
 function LobbyScreen() {
   const { roomCode } = Route.useParams()
   const navigate = useNavigate()
-  const startGameMutation = useMutation(api.gameEngine.startGame)
+  const triggerCountdownMutation = useMutation(api.gameEngine.triggerCountdown)
   const leaveGameMutation = useMutation(api.games.leaveGame)
   const joinGameMutation = useMutation(api.games.joinGame)
   const kickPlayerMutation = useMutation(api.games.kickPlayer)
@@ -56,7 +57,7 @@ function LobbyScreen() {
           name: getGuestName(),
         })
           .then(() => setHasJoined(true))
-          .catch(() => {})
+          .catch(() => { })
       } else {
         setHasJoined(true)
       }
@@ -78,7 +79,7 @@ function LobbyScreen() {
         name,
       })
         .then(() => setHasJoined(true))
-        .catch(() => {})
+        .catch(() => { })
     }
   }
 
@@ -87,10 +88,9 @@ function LobbyScreen() {
     setIsStarting(true)
     setError('')
     try {
-      await startGameMutation({ gameId: game._id, userId })
+      await triggerCountdownMutation({ gameId: game._id, userId })
     } catch (e: any) {
       setError(e.message || 'Failed to start')
-    } finally {
       setIsStarting(false)
     }
   }
@@ -172,6 +172,10 @@ function LobbyScreen() {
     <div className="stars-bg flex min-h-[100dvh] flex-col px-5 py-6">
       <NamePromptDialog open={needsName} onComplete={handleNameComplete} />
 
+      {/* Countdown Overlay */}
+      {game.startCountdownAt && (
+        <CountdownOverlay countdownStartTime={game.startCountdownAt} />
+      )}
       <div className="flex items-center justify-between">
         <button
           onClick={handleLeave}
@@ -264,11 +268,10 @@ function LobbyScreen() {
           <div className="flex flex-col items-center gap-3">
             <button
               onClick={handleToggleReady}
-              className={`game-btn w-full max-w-sm py-4 text-lg transition-all ${
-                currentPlayer?.isReady
+              className={`game-btn w-full max-w-sm py-4 text-lg transition-all ${currentPlayer?.isReady
                   ? 'bg-green-500 text-white hover:bg-green-600'
                   : 'bg-secondary text-foreground hover:bg-secondary/80'
-              }`}
+                }`}
             >
               {currentPlayer?.isReady ? (
                 <span className="flex items-center justify-center gap-2">

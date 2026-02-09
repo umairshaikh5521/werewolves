@@ -69,6 +69,7 @@ export default defineSchema({
     phaseEndTime: v.number(),
     winningTeam: v.optional(v.string()),
     endReason: v.optional(v.string()),
+    startCountdownAt: v.optional(v.number()),
   }).index('by_code', ['roomCode']),
 
   players: defineTable({

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Skull, Crown, User, Check, X } from 'lucide-react'
 import { getPlayerColor } from '@/lib/role-config'
@@ -56,9 +57,11 @@ export function PlayerAvatar({
   playerIndex = 0,
   isWolfTeammate = false,
 }: PlayerAvatarProps) {
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+
   const sizeClasses = {
-    xs: 'w-12 h-16',
-    sm: 'w-14 h-18',
+    xs: 'w-full h-[4.5rem]',
+    sm: 'w-full h-20',
     md: 'w-20 h-24',
     lg: 'w-24 h-28',
   }
@@ -85,10 +88,14 @@ export function PlayerAvatar({
   }
 
   return (
-    <Tooltip>
+    <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
       <TooltipTrigger asChild>
         <button
-          onClick={onClick}
+          onClick={() => {
+            setTooltipOpen(true)
+            setTimeout(() => setTooltipOpen(false), 2000)
+            onClick?.()
+          }}
           disabled={!onClick}
           className={cn(
             'relative flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 p-1.5 transition-all',

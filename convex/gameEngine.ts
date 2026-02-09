@@ -27,16 +27,23 @@ const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
   12: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 5 },
 }
 
-const NIGHT_DURATION = 30_000
+// Dynamic durations based on player count
+function getNightDuration(playerCount: number): number {
+  return playerCount > 8 ? 50_000 : 40_000 // 50s if >8 players, else 40s
+}
+
+function getVotingDuration(playerCount: number): number {
+  return playerCount > 8 ? 35_000 : 25_000 // 35s if >8 players, else 25s
+}
+
 const DAY_DURATION = 60_000
-const VOTING_DURATION = 15_000
 const MAX_ROUNDS = 10
 
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array]
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr
 }
@@ -85,6 +92,105 @@ function buildRoleData(role: GameRole) {
   }
   return undefined
 }
+
+const COUNTDOWN_DURATION = 6_000 // 6 seconds
+
+export const triggerCountdown = mutation({
+  args: { gameId: v.id('games'), userId: v.string() },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game) throw new Error('Game not found')
+    if (game.status !== 'lobby') throw new Error('Game already started')
+    if (game.hostId !== args.userId) throw new Error('Only host can start')
+
+    const players = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    if (players.length < 5 || players.length > 12) {
+      throw new Error('Need 5-12 players')
+    }
+
+    const notReadyPlayers = players.filter((p: any) => !p.isHost && !p.isReady)
+    if (notReadyPlayers.length > 0) {
+      throw new Error('All players must be ready to start')
+    }
+
+    // Set countdown start time
+    const countdownAt = Date.now()
+    await ctx.db.patch(args.gameId, { startCountdownAt: countdownAt })
+
+    // Schedule actual game start after countdown
+    await ctx.scheduler.runAfter(COUNTDOWN_DURATION, internal.gameEngine.executeStartGame, {
+      gameId: args.gameId,
+    })
+
+    return { countdownAt }
+  },
+})
+
+export const executeStartGame = internalMutation({
+  args: { gameId: v.id('games') },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game) throw new Error('Game not found')
+    if (game.status !== 'lobby') return // Already started
+
+    // Clear the countdown
+    await ctx.db.patch(args.gameId, { startCountdownAt: undefined })
+
+    // Now run the actual start logic
+    const players = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    const dist = ROLE_DISTRIBUTION[players.length]
+    if (!dist) {
+      throw new Error(`No role distribution defined for ${players.length} players`)
+    }
+
+    const roles = buildRoleList(dist, players.length)
+    const shuffledRoles = shuffle(roles)
+
+    for (let i = 0; i < players.length; i++) {
+      const roleInfo = shuffledRoles[i]
+      if (!roleInfo) {
+        throw new Error(`Missing role for player ${i}`)
+      }
+
+      const patch: Record<string, unknown> = {
+        role: roleInfo.role,
+        team: roleInfo.team,
+        isAlive: true,
+      }
+
+      const roleData = buildRoleData(roleInfo.role)
+      if (roleData !== undefined) {
+        patch.roleData = roleData
+      }
+
+      await ctx.db.patch(players[i]._id, patch)
+    }
+
+    const nightDuration = getNightDuration(players.length)
+    const phaseEndTime = Date.now() + nightDuration
+
+    await ctx.db.patch(args.gameId, {
+      status: 'active',
+      phase: 'night',
+      turnNumber: 1,
+      phaseEndTime,
+    })
+
+    await ctx.scheduler.runAfter(nightDuration, internal.gameEngine.transitionPhase, {
+      gameId: args.gameId,
+      expectedTurn: 1,
+      expectedPhase: 'night',
+    })
+  },
+})
 
 export const startGame = mutation({
   args: { gameId: v.id('games'), userId: v.string() },
@@ -158,7 +264,8 @@ export const startGame = mutation({
     })
     console.log(`[Game ${args.gameId}] Final role count:`, roleCount)
 
-    const phaseEndTime = Date.now() + NIGHT_DURATION
+    const nightDuration = getNightDuration(players.length)
+    const phaseEndTime = Date.now() + nightDuration
 
     await ctx.db.patch(args.gameId, {
       status: 'active',
@@ -167,7 +274,7 @@ export const startGame = mutation({
       phaseEndTime,
     })
 
-    await ctx.scheduler.runAfter(NIGHT_DURATION, internal.gameEngine.transitionPhase, {
+    await ctx.scheduler.runAfter(nightDuration, internal.gameEngine.transitionPhase, {
       gameId: args.gameId,
       expectedTurn: 1,
       expectedPhase: 'night',
@@ -228,9 +335,10 @@ export const transitionPhase = internalMutation({
         expectedPhase: 'day',
       })
     } else if (game.phase === 'day') {
-      const phaseEndTime = Date.now() + VOTING_DURATION
+      const votingDuration = getVotingDuration(players.length)
+      const phaseEndTime = Date.now() + votingDuration
       await ctx.db.patch(args.gameId, { phase: 'voting', phaseEndTime })
-      await ctx.scheduler.runAfter(VOTING_DURATION, internal.gameEngine.transitionPhase, {
+      await ctx.scheduler.runAfter(votingDuration, internal.gameEngine.transitionPhase, {
         gameId: args.gameId,
         expectedTurn: game.turnNumber,
         expectedPhase: 'voting',
@@ -292,13 +400,14 @@ export const transitionPhase = internalMutation({
       }
 
       const nextTurn = game.turnNumber + 1
-      const phaseEndTime = Date.now() + NIGHT_DURATION
+      const nightDuration = getNightDuration(players.length)
+      const phaseEndTime = Date.now() + nightDuration
       await ctx.db.patch(args.gameId, {
         phase: 'night',
         turnNumber: nextTurn,
         phaseEndTime,
       })
-      await ctx.scheduler.runAfter(NIGHT_DURATION, internal.gameEngine.transitionPhase, {
+      await ctx.scheduler.runAfter(nightDuration, internal.gameEngine.transitionPhase, {
         gameId: args.gameId,
         expectedTurn: nextTurn,
         expectedPhase: 'night',

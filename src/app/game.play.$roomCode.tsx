@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { getGuestId } from '@/lib/guest-identity'
+import { playSound, playCountdown, stopCountdown } from '@/lib/sounds'
 import { PhaseIndicator } from '@/components/game/PhaseIndicator'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
 import { GameChat } from '@/components/game/GameChat'
@@ -78,6 +79,9 @@ function GamePlayScreen() {
   const [isResetting, setIsResetting] = useState(false)
   const roleRevealShown = useRef(false)
   const conversionShown = useRef(false)
+  const previousPhase = useRef<string | null>(null)
+  const gameEndedSoundPlayed = useRef(false)
+  const clockRunning = useRef(false)
 
   useEffect(() => {
     if (myPlayer?.role && !roleRevealShown.current) {
@@ -99,6 +103,79 @@ function GamePlayScreen() {
     setHasActed(false)
     setHasConverted(false)
   }, [game?.phase, game?.turnNumber])
+
+  // Phase change sound effects
+  useEffect(() => {
+    if (!game?.phase) return
+
+    const currentPhase = game.phase
+    const prevPhase = previousPhase.current
+
+    // Only play sound on actual phase changes (not initial load)
+    if (prevPhase !== null && prevPhase !== currentPhase) {
+      if (currentPhase === 'night') {
+        playSound('night', 0.5)
+      } else if (currentPhase === 'day') {
+        playSound('morning', 0.5)
+      } else if (currentPhase === 'voting') {
+        playSound('votingStarted', 0.5)
+      }
+    }
+
+    previousPhase.current = currentPhase
+  }, [game?.phase])
+
+  // Countdown sound for last 6 seconds
+  const phaseEndTimeRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    phaseEndTimeRef.current = game?.phaseEndTime ?? null
+  }, [game?.phaseEndTime])
+
+  useEffect(() => {
+    if (!game?.phaseEndTime || game?.status !== 'active') {
+      stopCountdown()
+      clockRunning.current = false
+      return
+    }
+
+    const checkTimer = () => {
+      const endTime = phaseEndTimeRef.current
+      if (!endTime) return
+
+      const now = Date.now()
+      const timeLeft = endTime - now
+      const secondsLeft = Math.ceil(timeLeft / 1000)
+
+      // Play countdown sound when 6 seconds left (only once per phase)
+      if (secondsLeft <= 6 && secondsLeft > 0 && !clockRunning.current) {
+        console.log('[Countdown] Playing countdown sound!')
+        clockRunning.current = true
+        playCountdown(0.5)
+      } else if (secondsLeft <= 0 && clockRunning.current) {
+        clockRunning.current = false
+        stopCountdown()
+      }
+    }
+
+    checkTimer()
+    const interval = setInterval(checkTimer, 500)
+
+    return () => {
+      clearInterval(interval)
+      stopCountdown()
+      clockRunning.current = false
+    }
+  }, [game?.phaseEndTime, game?.status, game?.phase])
+
+  // Game end sound
+  useEffect(() => {
+    if (game?.status === 'ended' && !gameEndedSoundPlayed.current) {
+      gameEndedSoundPlayed.current = true
+      stopCountdown()
+      playSound('levelComplete', 0.6)
+    }
+  }, [game?.status])
 
   const isDetective = myPlayer?.role === 'detective' && game?.phase === 'night'
   const selectedPlayer = players?.find((p) => p._id === selectedPlayerId)
@@ -191,6 +268,7 @@ function GamePlayScreen() {
         playerId: myPlayer._id,
         targetId: selectedPlayerId,
       })
+      playSound('gunshot', 0.6)
       setSelectedPlayerId(null)
     } catch {
       // shoot failed
