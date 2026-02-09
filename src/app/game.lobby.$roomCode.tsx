@@ -147,6 +147,33 @@ function LobbyScreen() {
   }
 
   if (game.status === 'ended') {
+    // For non-host players, show a waiting screen
+    if (!isHost) {
+      return (
+        <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+            <span className="text-3xl">⏳</span>
+          </div>
+          <p className="font-display text-lg font-semibold text-foreground">Game Ended</p>
+          <p className="text-center text-sm text-muted-foreground">
+            Waiting for host to start a new game...
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: '0.2s' }} />
+            <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: '0.4s' }} />
+          </div>
+          <button
+            onClick={() => navigate({ to: '/game' })}
+            className="game-btn mt-4 bg-secondary px-8 py-3 text-sm text-secondary-foreground"
+          >
+            Leave Room
+          </button>
+        </div>
+      )
+    }
+
+    // For host, show the original game ended screen with option to play again
     return (
       <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-6">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -154,7 +181,7 @@ function LobbyScreen() {
         </div>
         <p className="font-display text-lg font-semibold text-foreground">Game Ended</p>
         <p className="text-center text-sm text-muted-foreground">
-          This game has already finished.
+          Click below to start a new game with the same players.
         </p>
         <button
           onClick={() => navigate({ to: '/game' })}
@@ -269,8 +296,8 @@ function LobbyScreen() {
             <button
               onClick={handleToggleReady}
               className={`game-btn w-full max-w-sm py-4 text-lg transition-all ${currentPlayer?.isReady
-                  ? 'bg-green-500 text-white hover:bg-green-600'
-                  : 'bg-secondary text-foreground hover:bg-secondary/80'
+                ? 'bg-green-500 text-white hover:bg-green-600'
+                : 'bg-secondary text-foreground hover:bg-secondary/80'
                 }`}
             >
               {currentPlayer?.isReady ? (
