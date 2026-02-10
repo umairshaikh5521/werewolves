@@ -22,7 +22,7 @@ const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     9: { wolf: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, hunter: 1, jester: 1, villager: 2 },
     10: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 1 },
     11: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 2 },
-    12: { wolf: 2, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 2 },
+    12: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 3 },
 }
 
 const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {
@@ -126,7 +126,7 @@ export function CountdownOverlay({
                                     className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1"
                                 >
                                     <span className="text-xs">{r.emoji}</span>
-                                    <span className={`text-[11px] font-semibold ${r.color}`}>
+                                    <span className="text-[11px] font-semibold text-white">
                                         {ROLE_META[r.role]?.label || r.role}
                                     </span>
                                     {r.count > 1 && (

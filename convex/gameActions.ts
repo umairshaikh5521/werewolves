@@ -732,7 +732,7 @@ export const getShootCount = query({
       .withIndex('by_game_turn', (q) => q.eq('gameId', args.gameId))
       .collect()
 
-    const shootActions = allActions.filter((a) => a.type === 'shoot')
+    const shootActions = allActions.filter((a) => a.type === 'shoot' || a.type === 'revenge')
     return { count: shootActions.length }
   },
 })

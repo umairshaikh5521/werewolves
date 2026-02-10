@@ -15,7 +15,7 @@ const roleDistribution = [
   { players: 9, wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 1, villagers: 2 },
   { players: 10, wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 1 },
   { players: 11, wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
-  { players: 12, wolves: 2, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
+  { players: 12, wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 3 },
 ]
 
 function GameGuide() {
@@ -162,7 +162,7 @@ function GameGuide() {
           </div>
         </div>
 
-        <div className="mb-4 flex items-center gap-3">
+        <div id="roles" className="mb-4 flex items-center gap-3 scroll-mt-20">
           <div className="h-px flex-1 bg-border" />
           <span className="font-display text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Roles
@@ -174,6 +174,8 @@ function GameGuide() {
           {roleOrder.map((roleKey) => {
             const role = roleConfig[roleKey]
             if (!role) return null
+            const isNew = ['jester', 'hunter', 'shadowWolf'].includes(roleKey)
+
             return (
               <div
                 key={roleKey}
@@ -201,6 +203,11 @@ function GameGuide() {
                       <h3 className={cn('font-display text-xl font-bold', role.color)}>
                         {role.title}
                       </h3>
+                      {isNew && (
+                        <span className="animate-pulse rounded bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                          NEW
+                        </span>
+                      )}
                       {role.team === 'evil' ? (
                         <Skull className="h-4 w-4 text-wolf-red" />
                       ) : role.team === 'neutral' ? (

@@ -201,7 +201,7 @@ Roles are automatically assigned based on the number of players in the lobby.
 | **9**   | 1    | 1      | 0      | 1    | 1      | 1      | 0         | 1      | 1      | 2        |
 | **10**  | 1    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 1        |
 | **11**  | 1    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 2        |
-| **12**  | 2    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 2        |
+| **12**  | 1    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 3        |
 
 ### Distribution Notes:
 - **5-6 players:** Basic setup (Wolf, Seer, Doctor, Villagers)

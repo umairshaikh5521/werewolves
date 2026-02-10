@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
@@ -110,9 +110,13 @@ function GameHome() {
           <p className="font-body text-sm text-muted-foreground">
             Social Deduction. Trust No One.
           </p>
-          <p className="mt-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-[11px] font-semibold text-fuchsia-400">
+          <Link
+            to="/game/guide"
+            hash="roles"
+            className="mt-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-[11px] font-semibold text-fuchsia-400 hover:bg-fuchsia-500/20 transition-colors"
+          >
             🆕 New roles: Jester, Hunter & Shadow Wolf
-          </p>
+          </Link>
         </div>
 
         {displayName && (
