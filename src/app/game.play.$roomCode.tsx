@@ -643,7 +643,7 @@ function GamePlayScreen() {
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
           </button>
 
-          {isWolfTeam && myPlayer.isAlive && (
+          {isWolfTeam && (
             <div className="flex border-b border-border">
               <button
                 onClick={() => setChatChannel('global')}
@@ -711,7 +711,7 @@ function GamePlayScreen() {
             </SheetTitle>
           </SheetHeader>
 
-          {isWolfTeam && myPlayer.isAlive && (
+          {isWolfTeam && (
             <div className="flex border-b border-border">
               <button
                 onClick={() => setChatChannel('global')}
