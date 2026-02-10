@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils'
-import { Moon, Sun, Vote } from 'lucide-react'
+import { Moon, Sun, Vote, Target } from 'lucide-react'
 import { useGameTimer } from '@/hooks/use-game-timer'
 
 interface PhaseIndicatorProps {
-  phase: 'night' | 'day' | 'voting'
+  phase: 'night' | 'day' | 'voting' | 'hunter_revenge'
   phaseEndTime: number
   turnNumber: number
   role?: string
@@ -35,6 +35,14 @@ const phaseConfig = {
     border: 'border-wolf-red/30',
     iconColor: 'text-wolf-red',
     timerColor: 'text-wolf-red',
+  },
+  hunter_revenge: {
+    label: 'Hunter',
+    icon: Target,
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/30',
+    iconColor: 'text-orange-500',
+    timerColor: 'text-orange-500',
   },
 }
 
@@ -80,10 +88,13 @@ export function PhaseIndicator({ phase, phaseEndTime, turnNumber, role, bullets,
 const roleStyles: Record<string, { bg: string; text: string; icon: string }> = {
   wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
   kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾' },
+  shadowWolf: { bg: 'bg-violet-500/20 border-violet-500/40', text: 'text-violet-500', icon: '👤' },
   seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
   doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
   gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
   detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
+  hunter: { bg: 'bg-orange-500/20 border-orange-500/40', text: 'text-orange-500', icon: '🏹' },
+  jester: { bg: 'bg-fuchsia-500/20 border-fuchsia-500/40', text: 'text-fuchsia-500', icon: '🃏' },
   villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
 }
 
@@ -93,7 +104,7 @@ function RoleBadgeInline({ role, bullets }: { role: string; bullets?: number }) 
     <div className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 ${c.bg}`}>
       <span className="text-[10px]">{c.icon}</span>
       <span className={`font-display text-[10px] font-semibold capitalize ${c.text}`}>
-        {role === 'kittenWolf' ? 'Kitten' : role}
+        {role === 'kittenWolf' ? 'Kitten' : role === 'shadowWolf' ? 'Shadow' : role}
       </span>
       {role === 'gunner' && bullets !== undefined && (
         <span className="text-[9px] text-muted-foreground">x{bullets}</span>

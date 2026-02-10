@@ -19,9 +19,13 @@ export const sendMessage = mutation({
 
     if (args.channel === 'global') {
       if (game.phase === 'night') throw new Error('Cannot chat during night')
+      // Shadow Wolf mute: muted players cannot send global messages during the day
+      if ((game.phase === 'day' || game.phase === 'voting') && player.isMuted) {
+        throw new Error('You have been silenced and cannot speak during the day')
+      }
     } else if (args.channel === 'wolves') {
       if (game.phase !== 'night') throw new Error('Wolf chat only during night')
-      if (player.role !== 'wolf' && player.role !== 'kittenWolf') throw new Error('Only wolves can use wolf chat')
+      if (player.role !== 'wolf' && player.role !== 'kittenWolf' && player.role !== 'shadowWolf') throw new Error('Only wolves can use wolf chat')
     }
 
     return await ctx.db.insert('chat', {
@@ -49,7 +53,7 @@ export const getMessages = query({
       .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
       .collect()
 
-    const isWolfTeam = player.role === 'wolf' || player.role === 'kittenWolf'
+    const isWolfTeam = player.role === 'wolf' || player.role === 'kittenWolf' || player.role === 'shadowWolf'
 
     return allMessages.filter((msg) => {
       if (msg.channel === 'global') return true

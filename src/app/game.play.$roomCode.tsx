@@ -52,8 +52,20 @@ function GamePlayScreen() {
   const shootGun = useMutation(api.gameActions.shootGun)
   const investigatePlayers = useMutation(api.gameActions.investigatePlayers)
   const convertPlayer = useMutation(api.gameActions.convertPlayer)
+  const submitMuteFn = useMutation(api.gameActions.submitMute)
+  const skipMuteFn = useMutation(api.gameActions.skipMute)
+  const hunterRevengeFn = useMutation(api.gameActions.hunterRevenge)
   const sendMessage = useMutation(api.gameChat.sendMessage)
   const resetToLobby = useMutation(api.games.resetToLobby)
+
+  const muteStatus = useQuery(
+    api.gameActions.getMuteStatus,
+    game && myPlayer ? { gameId: game._id, playerId: myPlayer._id } : 'skip'
+  )
+  const hunterRevengeState = useQuery(
+    api.gameActions.getHunterRevengeState,
+    game ? { gameId: game._id } : 'skip'
+  )
 
   const conversionStatus = useQuery(
     api.gameActions.getConversionStatus,
@@ -222,7 +234,7 @@ function GamePlayScreen() {
       const target = players?.find((p) => p._id === playerId)
       if (!target || !target.isAlive) return
       if (playerId === myPlayer._id && game.phase !== 'night') return
-      const isWolfRole = myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf'
+      const isWolfRole = myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf' || myPlayer.role === 'shadowWolf'
       if (game.phase === 'night' && isWolfRole && target.team === 'bad') return
 
       if (isDetective) {
@@ -255,7 +267,7 @@ function GamePlayScreen() {
 
     let actionType: 'kill' | 'save' | 'scan' | 'vote'
     if (game.phase === 'night') {
-      if (myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf') actionType = 'kill'
+      if (myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf' || myPlayer.role === 'shadowWolf') actionType = 'kill'
       else if (myPlayer.role === 'seer') actionType = 'scan'
       else if (myPlayer.role === 'doctor') actionType = 'save'
       else return
@@ -326,13 +338,56 @@ function GamePlayScreen() {
     }
   }, [game, myPlayer, selectedPlayerId, selectedPlayerId2, hasActed, investigatePlayers])
 
+  // Shadow Wolf mute handler
+  const handleMute = useCallback(async () => {
+    if (!game || !myPlayer || !selectedPlayerId) return
+    if (myPlayer.role !== 'shadowWolf') return
+    try {
+      await submitMuteFn({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId: selectedPlayerId,
+      })
+    } catch {
+      // mute failed
+    }
+  }, [game, myPlayer, selectedPlayerId, submitMuteFn])
+
+  const handleSkipMute = useCallback(async () => {
+    if (!game || !myPlayer) return
+    if (myPlayer.role !== 'shadowWolf') return
+    try {
+      await skipMuteFn({
+        gameId: game._id,
+        playerId: myPlayer._id,
+      })
+    } catch {
+      // skip mute failed
+    }
+  }, [game, myPlayer, skipMuteFn])
+
+  // Hunter revenge handler
+  const handleHunterRevenge = useCallback(async () => {
+    if (!game || !myPlayer || !selectedPlayerId) return
+    if (game.phase !== 'hunter_revenge') return
+    try {
+      await hunterRevengeFn({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId: selectedPlayerId,
+      })
+    } catch {
+      // revenge failed
+    }
+  }, [game, myPlayer, selectedPlayerId, hunterRevengeFn])
+
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!game || !myPlayer) return
 
-      let channel: 'global' | 'wolves' | 'dead'
+      let channel: 'global' | 'wolves'
       if (!myPlayer.isAlive) {
-        channel = 'dead'
+        return // dead players cannot send messages
       } else if (myPlayer.team === 'bad') {
         channel = chatChannel
       } else {
@@ -471,11 +526,14 @@ function GamePlayScreen() {
   }
 
   const isWolfTeam = myPlayer.team === 'bad'
+  const isMuted = muteStatus?.isMuted || false
   const chatDisabled =
     !myPlayer.isAlive ||
     (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive) ||
     (game.phase === 'night' && isWolfTeam && chatChannel === 'global') ||
-    (game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves')
+    (game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves') ||
+    (isMuted && (game.phase === 'day' || game.phase === 'voting') && chatChannel === 'global') ||
+    game.phase === 'hunter_revenge'
 
   const currentChannel = isWolfTeam ? chatChannel : 'global'
 
@@ -553,6 +611,12 @@ function GamePlayScreen() {
             hasBitten={myPlayer.roleData?.hasBitten}
             onConvert={handleConvert}
             hasConverted={hasConverted}
+            isMuted={isMuted}
+            onMute={handleMute}
+            onSkipMute={handleSkipMute}
+            isHunterRevenge={game.phase === 'hunter_revenge'}
+            isHunterRevengePlayer={game.phase === 'hunter_revenge' && hunterRevengeState?.hunterPlayerId === myPlayer._id}
+            onHunterRevenge={handleHunterRevenge}
           />
         </div>
 
@@ -607,13 +671,17 @@ function GamePlayScreen() {
               currentChannel={currentChannel}
               disabled={chatDisabled}
               placeholder={
-                chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
-                  ? 'Village chat disabled at night'
-                  : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
-                    ? 'Wolf chat disabled during the day'
-                    : currentChannel === 'wolves'
-                      ? 'Wolf chat...'
-                      : 'Message the village...'
+                isMuted && (game.phase === 'day' || game.phase === 'voting')
+                  ? '🔇 You have been silenced'
+                  : game.phase === 'hunter_revenge'
+                    ? 'Waiting for the Hunter\'s final shot...'
+                    : chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
+                      ? 'Village chat disabled at night'
+                      : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
+                        ? 'Wolf chat disabled during the day'
+                        : currentChannel === 'wolves'
+                          ? 'Wolf chat...'
+                          : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
@@ -671,13 +739,17 @@ function GamePlayScreen() {
               currentChannel={currentChannel}
               disabled={chatDisabled}
               placeholder={
-                chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
-                  ? 'Village chat disabled at night'
-                  : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
-                    ? 'Wolf chat disabled during the day'
-                    : currentChannel === 'wolves'
-                      ? 'Wolf chat...'
-                      : 'Message the village...'
+                isMuted && (game.phase === 'day' || game.phase === 'voting')
+                  ? '🔇 You have been silenced'
+                  : game.phase === 'hunter_revenge'
+                    ? 'Waiting for the Hunter\'s final shot...'
+                    : chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
+                      ? 'Village chat disabled at night'
+                      : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
+                        ? 'Wolf chat disabled during the day'
+                        : currentChannel === 'wolves'
+                          ? 'Wolf chat...'
+                          : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />

@@ -32,6 +32,17 @@ export function GameOverOverlay({
   isResetting,
 }: GameOverOverlayProps) {
   const isVillageWin = winningTeam === 'good'
+  const isJesterWin = winningTeam === 'neutral'
+
+  const iconBg = isJesterWin ? 'bg-fuchsia-500/20' : isVillageWin ? 'bg-village-green/20' : 'bg-wolf-red/20'
+  const icon = isJesterWin ? '🃏' : isVillageWin ? '🏘️' : '🐺'
+  const titleColor = isJesterWin ? 'text-fuchsia-500' : isVillageWin ? 'text-village-green' : 'text-wolf-red'
+  const title = isJesterWin ? 'Jester Wins!' : isVillageWin ? 'Village Wins!' : 'Werewolves Win!'
+  const fallbackReason = isJesterWin
+    ? 'The Jester fooled everyone!'
+    : isVillageWin
+      ? 'All the wolves have been eliminated'
+      : 'The wolves have overtaken the village'
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto bg-background/95 p-6 py-10 backdrop-blur-sm">
@@ -39,25 +50,23 @@ export function GameOverOverlay({
         <div
           className={cn(
             'flex h-24 w-24 items-center justify-center rounded-full',
-            isVillageWin ? 'bg-village-green/20' : 'bg-wolf-red/20'
+            iconBg
           )}
         >
-          <span className="text-5xl">{isVillageWin ? '🏘️' : '🐺'}</span>
+          <span className="text-5xl">{icon}</span>
         </div>
 
         <div className="text-center">
           <h1
             className={cn(
               'font-display text-3xl font-bold',
-              isVillageWin ? 'text-village-green' : 'text-wolf-red'
+              titleColor
             )}
           >
-            {isVillageWin ? 'Village Wins!' : 'Werewolves Win!'}
+            {title}
           </h1>
           <p className="mt-2 text-sm font-medium text-foreground">
-            {endReason || (isVillageWin
-              ? 'All the wolves have been eliminated'
-              : 'The wolves have overtaken the village')}
+            {endReason || fallbackReason}
           </p>
         </div>
 

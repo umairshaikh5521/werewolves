@@ -110,6 +110,9 @@ function GameHome() {
           <p className="font-body text-sm text-muted-foreground">
             Social Deduction. Trust No One.
           </p>
+          <p className="mt-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-[11px] font-semibold text-fuchsia-400">
+            🆕 New roles: Jester, Hunter & Shadow Wolf
+          </p>
         </div>
 
         {displayName && (

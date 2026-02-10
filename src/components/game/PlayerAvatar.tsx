@@ -25,20 +25,26 @@ interface PlayerAvatarProps {
 const roleColors: Record<string, string> = {
   wolf: 'bg-wolf-red/20 border-wolf-red',
   kittenWolf: 'bg-amber-500/20 border-amber-500',
+  shadowWolf: 'bg-violet-500/20 border-violet-500',
   seer: 'bg-seer-blue/20 border-seer-blue',
   doctor: 'bg-doctor-green/20 border-doctor-green',
   gunner: 'bg-moon-gold/20 border-moon-gold',
   detective: 'bg-moon-gold/20 border-moon-gold',
+  hunter: 'bg-orange-500/20 border-orange-500',
+  jester: 'bg-fuchsia-500/20 border-fuchsia-500',
   villager: 'bg-secondary border-border',
 }
 
 const roleIcons: Record<string, string> = {
   wolf: '🐺',
   kittenWolf: '🐱',
+  shadowWolf: '👤',
   seer: '🔮',
   doctor: '💊',
   gunner: '🔫',
   detective: '🕵️',
+  hunter: '🏹',
+  jester: '🃏',
   villager: '🏠',
 }
 
@@ -145,7 +151,7 @@ export function PlayerAvatar({
             {showRole && role ? (
               <span className={iconSizeClasses[size]}>{roleIcons[role]}</span>
             ) : (isWolfTeammate || isSelfWolf) && isAlive ? (
-              <span className={iconSizeClasses[size]}>{role === 'kittenWolf' ? '🐾' : '🐺'}</span>
+              <span className={iconSizeClasses[size]}>{role === 'kittenWolf' ? '🐾' : role === 'shadowWolf' ? '👤' : '🐺'}</span>
             ) : !isAlive ? (
               <Skull className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-dead-gray')} />
             ) : (
@@ -168,7 +174,9 @@ export function PlayerAvatar({
           </span>
 
           {showRole && role && (
-            <span className={cn('capitalize text-muted-foreground', size === 'xs' ? 'text-[8px]' : 'text-[10px]')}>{role}</span>
+            <span className={cn('capitalize text-muted-foreground', size === 'xs' ? 'text-[8px]' : 'text-[10px]')}>
+              {role === 'kittenWolf' ? 'Kitten Wolf' : role === 'shadowWolf' ? 'Shadow Wolf' : role}
+            </span>
           )}
         </button>
       </TooltipTrigger>

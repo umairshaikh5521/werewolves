@@ -3,41 +3,45 @@ import { mutation, internalMutation } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 
-type GameRole = 'wolf' | 'kittenWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'villager'
-type Team = 'good' | 'bad'
+type GameRole = 'wolf' | 'kittenWolf' | 'shadowWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'hunter' | 'jester' | 'villager'
+type Team = 'good' | 'bad' | 'neutral'
 
 interface RoleDist {
   wolves: number
   kittenWolf: number
+  shadowWolf: number
   seer: number
   doctor: number
   gunner: number
   detective: number
+  hunter: number
+  jester: number
   villagers: number
 }
 
 const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
-  5: { wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, villagers: 2 },
-  6: { wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  7: { wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
-  8: { wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
-  9: { wolves: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
-  10: { wolves: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
-  11: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
-  12: { wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 5 },
+  5: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, hunter: 0, jester: 0, villagers: 2 },
+  6: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 0, jester: 0, villagers: 2 },
+  7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 0, villagers: 1 },
+  8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 0, villagers: 1 },
+  9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 1, villagers: 2 },
+  10: { wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 1 },
+  11: { wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
+  12: { wolves: 2, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
 }
 
 // Dynamic durations based on player count
 function getNightDuration(playerCount: number): number {
-  return playerCount > 8 ? 50_000 : 40_000 // 50s if >8 players, else 40s
+  return playerCount > 8 ? 50_000 : 40_000
 }
 
 function getVotingDuration(playerCount: number): number {
-  return playerCount > 8 ? 35_000 : 25_000 // 35s if >8 players, else 25s
+  return playerCount > 8 ? 35_000 : 25_000
 }
 
 const DAY_DURATION = 60_000
 const MAX_ROUNDS = 10
+const HUNTER_REVENGE_DURATION = 20_000
 
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array]
@@ -57,6 +61,9 @@ function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: Gam
   for (let i = 0; i < dist.kittenWolf; i++) {
     roles.push({ role: 'kittenWolf', team: 'bad' })
   }
+  for (let i = 0; i < dist.shadowWolf; i++) {
+    roles.push({ role: 'shadowWolf', team: 'bad' })
+  }
   for (let i = 0; i < dist.seer; i++) {
     roles.push({ role: 'seer', team: 'good' })
   }
@@ -68,6 +75,12 @@ function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: Gam
   }
   for (let i = 0; i < dist.detective; i++) {
     roles.push({ role: 'detective', team: 'good' })
+  }
+  for (let i = 0; i < dist.hunter; i++) {
+    roles.push({ role: 'hunter', team: 'good' })
+  }
+  for (let i = 0; i < dist.jester; i++) {
+    roles.push({ role: 'jester', team: 'neutral' })
   }
   for (let i = 0; i < dist.villagers; i++) {
     roles.push({ role: 'villager', team: 'good' })
@@ -93,7 +106,7 @@ function buildRoleData(role: GameRole) {
   return undefined
 }
 
-const COUNTDOWN_DURATION = 6_000 // 6 seconds
+const COUNTDOWN_DURATION = 6_000
 
 export const triggerCountdown = mutation({
   args: { gameId: v.id('games'), userId: v.string() },
@@ -117,11 +130,9 @@ export const triggerCountdown = mutation({
       throw new Error('All players must be ready to start')
     }
 
-    // Set countdown start time
     const countdownAt = Date.now()
     await ctx.db.patch(args.gameId, { startCountdownAt: countdownAt })
 
-    // Schedule actual game start after countdown
     await ctx.scheduler.runAfter(COUNTDOWN_DURATION, internal.gameEngine.executeStartGame, {
       gameId: args.gameId,
     })
@@ -135,12 +146,10 @@ export const executeStartGame = internalMutation({
   handler: async (ctx, args) => {
     const game = await ctx.db.get(args.gameId)
     if (!game) throw new Error('Game not found')
-    if (game.status !== 'lobby') return // Already started
+    if (game.status !== 'lobby') return
 
-    // Clear the countdown
     await ctx.db.patch(args.gameId, { startCountdownAt: undefined })
 
-    // Now run the actual start logic
     const players = await ctx.db
       .query('players')
       .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
@@ -306,7 +315,7 @@ export const transitionPhase = internalMutation({
       .collect()
 
     if (game.phase === 'night') {
-      await resolveNight(ctx, args.gameId, players, actions, game)
+      const nightResult = await resolveNight(ctx, args.gameId, players, actions, game)
 
       const updatedPlayers = await ctx.db
         .query('players')
@@ -323,6 +332,31 @@ export const transitionPhase = internalMutation({
           status: 'ended',
           winningTeam: winner,
           endReason
+        })
+        return
+      }
+
+      // If Hunter was killed, enter hunter_revenge phase before day
+      if (nightResult.hunterDied && nightResult.hunterPlayerId) {
+        const phaseEndTime = Date.now() + HUNTER_REVENGE_DURATION
+        await ctx.db.patch(args.gameId, {
+          phase: 'hunter_revenge',
+          phaseEndTime,
+          hunterRevengePlayerId: nightResult.hunterPlayerId,
+          previousPhase: 'night',
+        })
+        await ctx.db.insert('chat', {
+          gameId: args.gameId,
+          senderId: nightResult.hunterPlayerId,
+          senderName: 'System',
+          content: '🏹 The Hunter has fallen! With their dying breath, they take aim...',
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+        await ctx.scheduler.runAfter(HUNTER_REVENGE_DURATION, internal.gameEngine.transitionPhase, {
+          gameId: args.gameId,
+          expectedTurn: game.turnNumber,
+          expectedPhase: 'hunter_revenge',
         })
         return
       }
@@ -344,7 +378,26 @@ export const transitionPhase = internalMutation({
         expectedPhase: 'voting',
       })
     } else if (game.phase === 'voting') {
-      const eliminatedPlayer = await resolveVoting(ctx, args.gameId, players, actions)
+      const voteResult = await resolveVoting(ctx, args.gameId, players, actions)
+
+      // Jester voted out = Jester wins, game ends
+      if (voteResult.isJester && voteResult.eliminatedPlayer) {
+        await ctx.db.insert('chat', {
+          gameId: args.gameId,
+          senderId: voteResult.eliminatedPlayer._id,
+          senderName: 'System',
+          content: `🃏 JESTER WINS! ${voteResult.eliminatedPlayer.name} was the Jester and fooled the entire village!`,
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+        await ctx.db.patch(args.gameId, {
+          status: 'ended',
+          winningTeam: 'neutral',
+          jesterWinnerId: voteResult.eliminatedPlayer._id,
+          endReason: `${voteResult.eliminatedPlayer.name} was the Jester! The fool wins!`,
+        })
+        return
+      }
 
       const updatedPlayers = await ctx.db
         .query('players')
@@ -354,9 +407,9 @@ export const transitionPhase = internalMutation({
       const winner = checkWinCondition(updatedPlayers)
 
       if (winner) {
-        const endReason = eliminatedPlayer
+        const endReason = voteResult.eliminatedPlayer
           ? winner === 'good'
-            ? `${eliminatedPlayer.name} was the last werewolf!`
+            ? `${voteResult.eliminatedPlayer.name} was the last werewolf!`
             : `The werewolves have overtaken the village`
           : winner === 'good'
             ? 'All werewolves have been eliminated'
@@ -369,18 +422,36 @@ export const transitionPhase = internalMutation({
         return
       }
 
+      // If Hunter was voted out, enter hunter_revenge phase
+      if (voteResult.isHunter && voteResult.eliminatedPlayer) {
+        const phaseEndTime = Date.now() + HUNTER_REVENGE_DURATION
+        await ctx.db.patch(args.gameId, {
+          phase: 'hunter_revenge',
+          phaseEndTime,
+          hunterRevengePlayerId: voteResult.eliminatedPlayer._id,
+          previousPhase: 'voting',
+        })
+        await ctx.db.insert('chat', {
+          gameId: args.gameId,
+          senderId: voteResult.eliminatedPlayer._id,
+          senderName: 'System',
+          content: '🏹 The Hunter has fallen! With their dying breath, they take aim...',
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+        await ctx.scheduler.runAfter(HUNTER_REVENGE_DURATION, internal.gameEngine.transitionPhase, {
+          gameId: args.gameId,
+          expectedTurn: game.turnNumber,
+          expectedPhase: 'hunter_revenge',
+        })
+        return
+      }
+
       if (game.turnNumber >= MAX_ROUNDS) {
-        const alivePlayers = (
-          await ctx.db
-            .query('players')
-            .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
-            .collect()
-        ).filter((p: any) => p.isAlive)
-
+        const alivePlayers = updatedPlayers.filter((p: any) => p.isAlive)
         const wolves = alivePlayers.filter((p: any) => p.team === 'bad')
-        const villagers = alivePlayers.filter((p: any) => p.team === 'good')
-
-        const finalWinner = wolves.length >= villagers.length ? 'bad' : 'good'
+        const nonWolves = alivePlayers.filter((p: any) => p.team !== 'bad')
+        const finalWinner = wolves.length >= nonWolves.length ? 'bad' : 'good'
 
         await ctx.db.insert('chat', {
           gameId: args.gameId,
@@ -412,9 +483,115 @@ export const transitionPhase = internalMutation({
         expectedTurn: nextTurn,
         expectedPhase: 'night',
       })
+    } else if (game.phase === 'hunter_revenge') {
+      // Resolve Hunter's revenge shot
+      const revengeAction = actions.find((a: any) => a.type === 'revenge')
+
+      if (revengeAction) {
+        const target = players.find((p: any) => p._id === revengeAction.targetId)
+        const hunter = players.find((p: any) => p._id === game.hunterRevengePlayerId)
+        if (target && target.isAlive) {
+          await ctx.db.patch(target._id, { isAlive: false })
+          await ctx.db.insert('chat', {
+            gameId: args.gameId,
+            senderId: game.hunterRevengePlayerId || players[0]._id,
+            senderName: 'System',
+            content: `🏹 ${hunter?.name || 'The Hunter'}'s final shot strikes ${target.name}!`,
+            channel: 'global',
+            timestamp: Date.now(),
+          })
+        }
+      } else {
+        await ctx.db.insert('chat', {
+          gameId: args.gameId,
+          senderId: game.hunterRevengePlayerId || players[0]._id,
+          senderName: 'System',
+          content: `The Hunter\'s aim falters... no shot was fired.`,
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+      }
+
+      // Clear hunter revenge state
+      await ctx.db.patch(args.gameId, {
+        hunterRevengePlayerId: undefined,
+        previousPhase: undefined,
+      })
+
+      // Re-check win condition after revenge
+      const updatedPlayers = await ctx.db
+        .query('players')
+        .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+        .collect()
+
+      const winner = checkWinCondition(updatedPlayers)
+      if (winner) {
+        await ctx.db.patch(args.gameId, {
+          status: 'ended',
+          winningTeam: winner,
+          endReason: winner === 'good'
+            ? 'The Hunter\'s final shot took down the last werewolf!'
+            : 'The werewolves have overtaken the village'
+        })
+        return
+      }
+
+      // Transition to the appropriate next phase
+      if (game.previousPhase === 'night') {
+        // Night → hunter_revenge → Day
+        const phaseEndTime = Date.now() + DAY_DURATION
+        await ctx.db.patch(args.gameId, { phase: 'day', phaseEndTime })
+        await ctx.scheduler.runAfter(DAY_DURATION, internal.gameEngine.transitionPhase, {
+          gameId: args.gameId,
+          expectedTurn: game.turnNumber,
+          expectedPhase: 'day',
+        })
+      } else if (game.previousPhase === 'voting') {
+        // Voting → hunter_revenge → Next Night
+        if (game.turnNumber >= MAX_ROUNDS) {
+          const alivePlayers = updatedPlayers.filter((p: any) => p.isAlive)
+          const wolves = alivePlayers.filter((p: any) => p.team === 'bad')
+          const nonWolves = alivePlayers.filter((p: any) => p.team !== 'bad')
+          const finalWinner = wolves.length >= nonWolves.length ? 'bad' : 'good'
+          await ctx.db.patch(args.gameId, {
+            status: 'ended',
+            winningTeam: finalWinner,
+            endReason: `Maximum rounds (${MAX_ROUNDS}) reached`
+          })
+          return
+        }
+        const nextTurn = game.turnNumber + 1
+        const nightDuration = getNightDuration(updatedPlayers.length)
+        const phaseEndTime = Date.now() + nightDuration
+        await ctx.db.patch(args.gameId, {
+          phase: 'night',
+          turnNumber: nextTurn,
+          phaseEndTime,
+        })
+        await ctx.scheduler.runAfter(nightDuration, internal.gameEngine.transitionPhase, {
+          gameId: args.gameId,
+          expectedTurn: nextTurn,
+          expectedPhase: 'night',
+        })
+      } else if (game.previousPhase === 'day') {
+        // Day (gunner shot) → hunter_revenge → Voting
+        const votingDuration = getVotingDuration(updatedPlayers.length)
+        const phaseEndTime = Date.now() + votingDuration
+        await ctx.db.patch(args.gameId, { phase: 'voting', phaseEndTime })
+        await ctx.scheduler.runAfter(votingDuration, internal.gameEngine.transitionPhase, {
+          gameId: args.gameId,
+          expectedTurn: game.turnNumber,
+          expectedPhase: 'voting',
+        })
+      }
     }
   },
 })
+
+interface NightResult {
+  hunterDied: boolean
+  hunterPlayerId?: Id<'players'>
+}
 
 async function resolveNight(
   ctx: { db: any; scheduler: any },
@@ -422,11 +599,25 @@ async function resolveNight(
   players: any[],
   actions: any[],
   game: any
-) {
-  const convertAction = actions.find((a: any) => a.type === 'convert')
-  const killVotes = actions.filter((a: any) => a.type === 'kill')
-  const saveActions = actions.filter((a: any) => a.type === 'save')
+): Promise<NightResult> {
+  const result: NightResult = { hunterDied: false }
 
+  // 1. Process Shadow Wolf mute — clear old mutes, apply new one
+  for (const player of players) {
+    if (player.isMuted) {
+      await ctx.db.patch(player._id, { isMuted: false })
+    }
+  }
+  const muteAction = actions.find((a: any) => a.type === 'mute')
+  if (muteAction) {
+    const muteTarget = players.find((p: any) => p._id === muteAction.targetId)
+    if (muteTarget && muteTarget.isAlive && muteTarget.team !== 'bad') {
+      await ctx.db.patch(muteTarget._id, { isMuted: true })
+    }
+  }
+
+  // 2. Process Doctor save
+  const saveActions = actions.filter((a: any) => a.type === 'save')
   const doctor = players.find((p: any) => p.role === 'doctor' && p.isAlive)
   if (doctor && saveActions.length > 0) {
     const doctorAction = saveActions.find((a: any) => a.actorId === doctor._id)
@@ -440,9 +631,12 @@ async function resolveNight(
     }
   }
 
+  // 3. Process Kitten Wolf conversion
+  const convertAction = actions.find((a: any) => a.type === 'convert')
   if (convertAction) {
     const target = players.find((p: any) => p._id === convertAction.targetId)
     if (target && target.isAlive && target.team === 'good') {
+      // Check if target is Hunter — conversion is NOT death, so no revenge
       await ctx.db.patch(target._id, {
         role: 'wolf',
         team: 'bad',
@@ -468,10 +662,12 @@ async function resolveNight(
         channel: 'wolves',
         timestamp: Date.now(),
       })
-      return
+      return result
     }
   }
 
+  // 4. Process wolf kill votes
+  const killVotes = actions.filter((a: any) => a.type === 'kill')
   if (killVotes.length > 0) {
     const voteCounts: Map<string, number> = new Map()
     for (const vote of killVotes) {
@@ -491,17 +687,24 @@ async function resolveNight(
     if (targetId) {
       const wasSaved = saveActions.some((a: any) => a.targetId === targetId)
       if (!wasSaved) {
+        const victim = players.find((p: any) => p._id === targetId)
         await ctx.db.patch(targetId, { isAlive: false })
+
+        // Check if the victim is the Hunter
+        if (victim && victim.role === 'hunter') {
+          result.hunterDied = true
+          result.hunterPlayerId = targetId
+        }
 
         await ctx.db.insert('chat', {
           gameId,
           senderId: players[0]._id,
           senderName: 'System',
-          content: `${players.find((p: any) => p._id === targetId)?.name || 'Someone'} was killed during the night.`,
+          content: `${victim?.name || 'Someone'} was killed during the night.`,
           channel: 'global',
           timestamp: Date.now(),
         })
-        return
+        return result
       }
 
       await ctx.db.insert('chat', {
@@ -512,7 +715,7 @@ async function resolveNight(
         channel: 'global',
         timestamp: Date.now(),
       })
-      return
+      return result
     }
   }
 
@@ -524,6 +727,13 @@ async function resolveNight(
     channel: 'global',
     timestamp: Date.now(),
   })
+  return result
+}
+
+interface VoteResult {
+  eliminatedPlayer: any | null
+  isJester: boolean
+  isHunter: boolean
 }
 
 async function resolveVoting(
@@ -531,7 +741,8 @@ async function resolveVoting(
   gameId: Id<'games'>,
   players: any[],
   actions: any[]
-): Promise<{ name: string } | null> {
+): Promise<VoteResult> {
+  const result: VoteResult = { eliminatedPlayer: null, isJester: false, isHunter: false }
   const votes = actions.filter((a: any) => a.type === 'vote' && a.phase === 'voting')
 
   if (votes.length === 0) {
@@ -543,7 +754,7 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
-    return null
+    return result
   }
 
   const voteCounts: Map<string, number> = new Map()
@@ -567,6 +778,18 @@ async function resolveVoting(
   if (targetId && maxVotes >= majority) {
     await ctx.db.patch(targetId, { isAlive: false })
     const eliminated = players.find((p: any) => p._id === targetId)
+    result.eliminatedPlayer = eliminated || null
+
+    // Check if eliminated player is the Jester
+    if (eliminated && eliminated.role === 'jester') {
+      result.isJester = true
+    }
+
+    // Check if eliminated player is the Hunter
+    if (eliminated && eliminated.role === 'hunter') {
+      result.isHunter = true
+    }
+
     await ctx.db.insert('chat', {
       gameId,
       senderId: players[0]._id,
@@ -575,7 +798,7 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
-    return eliminated || null
+    return result
   } else {
     await ctx.db.insert('chat', {
       gameId,
@@ -585,16 +808,16 @@ async function resolveVoting(
       channel: 'global',
       timestamp: Date.now(),
     })
-    return null
+    return result
   }
 }
 
 export function checkWinCondition(players: any[]): string | null {
   const alive = players.filter((p: any) => p.isAlive)
   const wolves = alive.filter((p: any) => p.team === 'bad')
-  const villagers = alive.filter((p: any) => p.team === 'good')
+  const nonWolves = alive.filter((p: any) => p.team !== 'bad') // includes neutrals (Jester)
 
   if (wolves.length === 0) return 'good'
-  if (wolves.length >= villagers.length) return 'bad'
+  if (wolves.length >= nonWolves.length) return 'bad'
   return null
 }

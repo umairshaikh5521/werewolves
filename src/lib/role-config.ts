@@ -6,7 +6,7 @@ export interface RoleInfo {
   description: string
   btnColor: string
   image: string
-  team: 'village' | 'evil'
+  team: 'village' | 'evil' | 'neutral'
   ability: string
 }
 
@@ -95,6 +95,39 @@ export const roleConfig: Record<string, RoleInfo> = {
     image: '/detetctive-photoroom.png',
     team: 'village',
     ability: 'Each night, select two players to compare. You will learn whether they belong to the same team or different teams. This powerful ability helps you narrow down the wolves through deduction.',
+  },
+  shadowWolf: {
+    color: 'text-violet-500',
+    bg: 'bg-violet-500/10',
+    border: 'border-violet-500/30',
+    title: 'Shadow Wolf',
+    description: 'A sinister wolf that can silence a villager each night, stealing their voice for the following day.',
+    btnColor: 'bg-violet-500 hover:bg-violet-500/90',
+    image: '/shadow-wolf.png',
+    team: 'evil',
+    ability: 'Each night, you participate in the wolf kill vote AND choose one player to silence. The silenced player cannot send messages in the village chat during the following day phase. Use this to shut down key information roles like the Seer or Detective.',
+  },
+  hunter: {
+    color: 'text-orange-500',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/30',
+    title: 'Hunter',
+    description: 'A brave hunter with one last shot. When you die, take someone down with you.',
+    btnColor: 'bg-orange-500 hover:bg-orange-500/90',
+    image: '/hunter.png',
+    team: 'village',
+    ability: 'You have no special night action, but when you are killed — by wolves, village vote, or gunner — you get one final shot. Choose any alive player to take down with you. Your dying act could save or doom the village.',
+  },
+  jester: {
+    color: 'text-fuchsia-500',
+    bg: 'bg-fuchsia-500/10',
+    border: 'border-fuchsia-500/30',
+    title: 'Jester',
+    description: 'The village fool with a secret agenda. Get yourself voted out to win!',
+    btnColor: 'bg-fuchsia-500 hover:bg-fuchsia-500/90',
+    image: '/jester.png',
+    team: 'neutral',
+    ability: 'You win if the village votes to eliminate you. You have no night abilities — just your wits and acting skills. Act suspicious enough to get voted out, but not so obvious that players catch on. If wolves or the gunner kill you, you lose.',
   },
   villager: {
     color: 'text-foreground',

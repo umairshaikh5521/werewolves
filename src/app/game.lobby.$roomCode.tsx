@@ -201,7 +201,7 @@ function LobbyScreen() {
 
       {/* Countdown Overlay */}
       {game.startCountdownAt && (
-        <CountdownOverlay countdownStartTime={game.startCountdownAt} />
+        <CountdownOverlay countdownStartTime={game.startCountdownAt} playerCount={playerCount} />
       )}
       <div className="flex items-center justify-between">
         <button

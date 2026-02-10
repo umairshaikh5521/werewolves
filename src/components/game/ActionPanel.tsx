@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { Crosshair, Eye, ShieldPlus, Vote, Moon, Search } from 'lucide-react'
+import { Crosshair, Eye, ShieldPlus, Vote, Moon, Search, Target } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +14,7 @@ import {
 
 interface ActionPanelProps {
   role: string
-  phase: 'night' | 'day' | 'voting'
+  phase: 'night' | 'day' | 'voting' | 'hunter_revenge'
   isAlive: boolean
   selectedPlayerName?: string
   selectedPlayerId?: string
@@ -32,6 +32,12 @@ interface ActionPanelProps {
   hasBitten?: boolean
   onConvert?: () => void
   hasConverted?: boolean
+  isMuted?: boolean
+  onMute?: () => void
+  onSkipMute?: () => void
+  isHunterRevenge?: boolean
+  isHunterRevengePlayer?: boolean
+  onHunterRevenge?: () => void
 }
 
 export function ActionPanel({
@@ -51,8 +57,61 @@ export function ActionPanel({
   hasBitten,
   onConvert,
   hasConverted,
+  isMuted,
+  onMute,
+  onSkipMute,
+  isHunterRevengePlayer,
+  onHunterRevenge,
 }: ActionPanelProps) {
   const [showBiteConfirm, setShowBiteConfirm] = useState(false)
+  const [hasMuted, setHasMuted] = useState(false)
+
+  // Reset mute state when phase changes (new night)
+  useEffect(() => { setHasMuted(false) }, [phase])
+
+  // Hunter Revenge phase — only the dying Hunter acts
+  if (phase === 'hunter_revenge') {
+    if (isHunterRevengePlayer) {
+      return (
+        <div className="flex flex-col gap-2 px-4 py-3">
+          <div className="flex items-center gap-2 text-orange-500">
+            <Target className="h-5 w-5 animate-pulse" />
+            <span className="font-display text-sm font-semibold">Your Final Shot</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You have fallen. Choose one player to take down with you!
+          </p>
+          <button
+            onClick={onHunterRevenge}
+            disabled={!selectedPlayerName}
+            className={cn(
+              'game-btn w-full py-2.5 text-xs font-semibold disabled:opacity-40',
+              'bg-orange-500 hover:bg-orange-500/90 text-white'
+            )}
+          >
+            {selectedPlayerName ? `🏹 Shoot ${selectedPlayerName}` : 'Select a target'}
+          </button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="animate-pulse flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/20">
+          <Target className="h-5 w-5 text-orange-500" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-sm font-semibold text-orange-500">
+            Hunter's Last Stand
+          </p>
+          <p className="text-xs text-muted-foreground">
+            The Hunter is taking their final shot...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (!isAlive) {
     return (
       <div className="flex items-center gap-3 px-4 py-3">
@@ -173,6 +232,76 @@ export function ActionPanel({
       )
     }
 
+    if (role === 'shadowWolf') {
+      return (
+        <div className="flex flex-col gap-2 px-4 py-3">
+          <div className="flex items-center gap-2 text-violet-500">
+            <ShadowIcon className="h-4 w-4" />
+            <span className="font-display text-xs font-semibold">Shadow Wolf</span>
+            <span className="text-[10px] text-muted-foreground">Kill & silence</span>
+          </div>
+
+          {/* Kill action */}
+          {hasActed ? (
+            <div className="animate-bounce-in rounded-lg bg-village-green/20 px-3 py-1.5 text-xs font-semibold text-village-green">
+              Kill vote submitted
+            </div>
+          ) : (
+            <button
+              onClick={onAction}
+              disabled={!selectedPlayerName}
+              className={cn(
+                'game-btn w-full py-2 text-xs font-semibold disabled:opacity-40',
+                'bg-wolf-red hover:bg-wolf-red/90 text-white'
+              )}
+            >
+              <span className="flex items-center justify-center gap-1.5">
+                <Crosshair className="h-3.5 w-3.5" />
+                {selectedPlayerName ? `Kill ${selectedPlayerName}` : 'Select target'}
+              </span>
+            </button>
+          )}
+
+          {/* Mute action */}
+          <div className="border-t border-border pt-2">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-semibold text-violet-400">🔇 Silence a player</span>
+            </div>
+            {hasMuted ? (
+              <div className="animate-bounce-in rounded-lg bg-violet-500/20 px-3 py-1.5 text-xs font-semibold text-violet-400">
+                Silence target set
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    onMute?.()
+                    setHasMuted(true)
+                  }}
+                  disabled={!selectedPlayerName}
+                  className={cn(
+                    'game-btn flex-1 py-1.5 text-xs font-semibold disabled:opacity-40',
+                    'bg-violet-500 hover:bg-violet-500/90 text-white'
+                  )}
+                >
+                  {selectedPlayerName ? `Silence ${selectedPlayerName}` : 'Select target'}
+                </button>
+                <button
+                  onClick={() => {
+                    onSkipMute?.()
+                    setHasMuted(true)
+                  }}
+                  className="game-btn px-3 py-1.5 text-xs font-semibold bg-secondary hover:bg-secondary/80 text-muted-foreground"
+                >
+                  Skip
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+
     if (role === 'seer') {
       return (
         <div className="space-y-3 p-4">
@@ -264,6 +393,7 @@ export function ActionPanel({
       )
     }
 
+    // Jester, Hunter, Villager, Gunner — all sleep at night
     return (
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="animate-float flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-seer-blue/10">
@@ -280,6 +410,35 @@ export function ActionPanel({
   }
 
   if (phase === 'voting') {
+    // Show muted indicator if player is muted
+    if (isMuted) {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20">
+            <span className="text-lg">🔇</span>
+          </div>
+          <div className="min-w-0">
+            <p className="font-display text-sm font-semibold text-violet-400">
+              You have been silenced
+            </p>
+            <p className="text-xs text-muted-foreground">You can still vote, but cannot speak</p>
+          </div>
+          <div className="ml-auto">
+            <button
+              onClick={onAction}
+              disabled={!selectedPlayerName || hasActed}
+              className={cn(
+                'game-btn px-4 py-2 text-xs font-semibold disabled:opacity-40',
+                hasActed ? 'bg-village-green/20 text-village-green' : 'bg-moon-gold hover:bg-moon-gold/90 text-primary-foreground'
+              )}
+            >
+              {hasActed ? 'Voted' : selectedPlayerName ? `Vote ${selectedPlayerName}` : 'Select'}
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <NightAction
         icon={<Vote className="h-5 w-5" />}
@@ -295,6 +454,7 @@ export function ActionPanel({
     )
   }
 
+  // Day phase
   if (role === 'gunner' && (bullets ?? 0) > 0) {
     return (
       <div className="flex flex-col gap-2 px-4 py-3">
@@ -326,6 +486,25 @@ export function ActionPanel({
             {selectedPlayerName ? `Shoot ${selectedPlayerName}` : 'Select a target'}
           </button>
         )}
+      </div>
+    )
+  }
+
+  // Day phase — show muted indicator
+  if (isMuted) {
+    return (
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20">
+          <span className="text-lg">🔇</span>
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-sm font-semibold text-violet-400">
+            Silenced by the Shadow Wolf
+          </p>
+          <p className="text-xs text-muted-foreground">
+            You cannot speak during this day. Your voice will return at night.
+          </p>
+        </div>
       </div>
     )
   }
@@ -379,6 +558,16 @@ function FangIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M12 2C8 2 4 6 4 10c0 2 1 4 2 5l1 7h10l1-7c1-1 2-3 2-5 0-4-4-8-8-8z" />
       <path d="M8 10l1 4" />
       <path d="M16 10l-1 4" />
+    </svg>
+  )
+}
+
+function ShadowIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2a7 7 0 0 0-7 7c0 3 2 5.5 4 7l3 5 3-5c2-1.5 4-4 4-7a7 7 0 0 0-7-7z" />
+      <circle cx="10" cy="9" r="1" />
+      <circle cx="14" cy="9" r="1" />
     </svg>
   )
 }

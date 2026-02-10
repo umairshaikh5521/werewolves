@@ -27,7 +27,7 @@ export const submitAction = mutation({
 
     if (args.type === 'kill') {
       if (game.phase !== 'night') throw new Error('Can only kill at night')
-      if (actor.role !== 'wolf' && actor.role !== 'kittenWolf') throw new Error('Only wolves can kill')
+      if (actor.role !== 'wolf' && actor.role !== 'kittenWolf' && actor.role !== 'shadowWolf') throw new Error('Only wolves can kill')
       if (target.team === 'bad') throw new Error('Cannot kill fellow wolf')
     } else if (args.type === 'save') {
       if (game.phase !== 'night') throw new Error('Can only save at night')
@@ -129,15 +129,24 @@ async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, ac
   // Determine which players need to act at night
   const nightActors = alivePlayers.filter((p: any) => {
     const role = p.role
-    return role === 'wolf' || role === 'kittenWolf' || role === 'seer' || role === 'doctor' || role === 'detective'
+    return role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf' || role === 'seer' || role === 'doctor' || role === 'detective'
   })
 
   // Check if each night actor has submitted an action
-  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert']
+  // Shadow Wolf needs BOTH a kill vote AND a mute (or skipMute) action
+  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert', 'mute', 'skipMute']
   const nightActions = actions.filter((a: any) => nightActionTypes.includes(a.type) && a.phase === 'night')
-  const actedPlayerIds = new Set(nightActions.map((a: any) => a.actorId.toString()))
 
-  const allActed = nightActors.every((p: any) => actedPlayerIds.has(p._id.toString()))
+  const allActed = nightActors.every((p: any) => {
+    const playerActions = nightActions.filter((a: any) => a.actorId.toString() === p._id.toString())
+    if (p.role === 'shadowWolf') {
+      // Shadow Wolf needs kill + (mute or skipMute)
+      const hasKill = playerActions.some((a: any) => a.type === 'kill')
+      const hasMuteAction = playerActions.some((a: any) => a.type === 'mute' || a.type === 'skipMute')
+      return hasKill && hasMuteAction
+    }
+    return playerActions.length > 0
+  })
 
   if (allActed && nightActors.length > 0) {
     await ctx.scheduler.runAfter(0, internal.gameEngine.transitionPhase, {
@@ -211,6 +220,33 @@ export const shootGun = mutation({
       timestamp: Date.now(),
     })
 
+    // Check if the shot target is the Hunter — trigger hunter revenge
+    if (target.role === 'hunter') {
+      const HUNTER_REVENGE_DURATION = 20_000
+      const phaseEndTime = Date.now() + HUNTER_REVENGE_DURATION
+      await ctx.db.patch(args.gameId, {
+        phase: 'hunter_revenge',
+        phaseEndTime,
+        hunterRevengePlayerId: target._id,
+        previousPhase: 'day',
+      })
+      await ctx.db.insert('chat', {
+        gameId: args.gameId,
+        senderId: target._id,
+        senderName: 'System',
+        content: '🏹 The Hunter has fallen! With their dying breath, they take aim...',
+        channel: 'global',
+        timestamp: Date.now(),
+      })
+      await ctx.scheduler.runAfter(HUNTER_REVENGE_DURATION, internal.gameEngine.transitionPhase, {
+        gameId: args.gameId,
+        expectedTurn: game.turnNumber,
+        expectedPhase: 'hunter_revenge',
+      })
+      return { killed: target.name, hunterRevenge: true }
+    }
+
+    // Normal win condition check (non-Hunter target)
     const players = await ctx.db
       .query('players')
       .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
@@ -295,8 +331,197 @@ export const investigatePlayers = mutation({
       .collect()
     await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
 
+    // For detective comparison: Jester (neutral) and village are both "not bad"
+    // So Jester vs Villager = same team, Jester vs Wolf = different teams
     const sameTeam = p1.team === p2.team
     return { sameTeam, target1Name: p1.name, target2Name: p2.name }
+  },
+})
+
+// Shadow Wolf mute action
+export const submitMute = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only mute at night')
+
+    const actor = await ctx.db.get(args.playerId)
+    if (!actor || !actor.isAlive) throw new Error('Player is not alive')
+    if (actor.role !== 'shadowWolf') throw new Error('Only Shadow Wolf can mute')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target || !target.isAlive) throw new Error('Target is not alive')
+    if (target.team === 'bad') throw new Error('Cannot mute fellow wolves')
+
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const existing = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'mute'
+    )
+
+    // Remove any skipMute if switching to mute
+    const existingSkip = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'skipMute'
+    )
+    if (existingSkip) {
+      await ctx.db.delete(existingSkip._id)
+    }
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { targetId: args.targetId })
+
+      const updatedActions = await ctx.db
+        .query('actions')
+        .withIndex('by_game_turn', (q) =>
+          q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+        )
+        .collect()
+      await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+      return existing._id
+    }
+
+    const actionId = await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'mute',
+      actorId: args.playerId,
+      targetId: args.targetId,
+    })
+
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return actionId
+  },
+})
+
+// Shadow Wolf skip mute action (choose not to mute anyone)
+export const skipMute = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only skip mute at night')
+
+    const actor = await ctx.db.get(args.playerId)
+    if (!actor || !actor.isAlive) throw new Error('Player is not alive')
+    if (actor.role !== 'shadowWolf') throw new Error('Only Shadow Wolf can skip mute')
+
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    // Remove any existing mute action
+    const existingMute = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'mute'
+    )
+    if (existingMute) {
+      await ctx.db.delete(existingMute._id)
+    }
+
+    const existingSkip = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'skipMute'
+    )
+    if (existingSkip) return existingSkip._id
+
+    // Insert a skipMute action so early night end knows the Shadow Wolf is done
+    const actionId = await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'skipMute',
+      actorId: args.playerId,
+      targetId: args.playerId, // self-target as placeholder
+    })
+
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return actionId
+  },
+})
+
+// Hunter revenge mutation
+export const hunterRevenge = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'hunter_revenge') throw new Error('Not in hunter revenge phase')
+    if (game.hunterRevengePlayerId !== args.playerId) throw new Error('Not the dying Hunter')
+
+    const hunter = await ctx.db.get(args.playerId)
+    if (!hunter) throw new Error('Hunter not found')
+    if (hunter.role !== 'hunter') throw new Error('Only Hunter can take revenge')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target || !target.isAlive) throw new Error('Target is not alive')
+
+    // Check for existing revenge action
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const existing = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'revenge'
+    )
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { targetId: args.targetId })
+    } else {
+      await ctx.db.insert('actions', {
+        gameId: args.gameId,
+        turnNumber: game.turnNumber,
+        phase: game.phase,
+        type: 'revenge',
+        actorId: args.playerId,
+        targetId: args.targetId,
+      })
+    }
+
+    // Trigger immediate phase transition (don't wait for timer)
+    await ctx.scheduler.runAfter(0, internal.gameEngine.transitionPhase, {
+      gameId: args.gameId,
+      expectedTurn: game.turnNumber,
+      expectedPhase: 'hunter_revenge',
+    })
+
+    return { targetName: target.name }
   },
 })
 
@@ -325,10 +550,13 @@ export const getSeerResult = query({
     const target = await ctx.db.get(scanAction.targetId)
     if (!target) return null
 
+    // Jester (neutral) shows as "good" to the Seer — they're not a wolf
+    const displayTeam = target.team === 'bad' ? 'bad' : 'good'
+
     return {
       targetId: target._id,
       targetName: target.name,
-      team: target.team,
+      team: displayTeam,
     }
   },
 })
@@ -509,3 +737,25 @@ export const getShootCount = query({
   },
 })
 
+// Query to check if a player is muted
+export const getMuteStatus = query({
+  args: { gameId: v.id('games'), playerId: v.id('players') },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get(args.playerId)
+    if (!player) return { isMuted: false }
+    return { isMuted: player.isMuted || false }
+  },
+})
+
+// Query to get the hunter revenge state for UI
+export const getHunterRevengeState = query({
+  args: { gameId: v.id('games') },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.phase !== 'hunter_revenge') return null
+    return {
+      hunterPlayerId: game.hunterRevengePlayerId,
+      phaseEndTime: game.phaseEndTime,
+    }
+  },
+})

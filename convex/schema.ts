@@ -12,7 +12,8 @@ export type Role = 'customer' | 'admin' | 'owner'
 export const gamePhaseValidator = v.union(
   v.literal('night'),
   v.literal('day'),
-  v.literal('voting')
+  v.literal('voting'),
+  v.literal('hunter_revenge')
 )
 
 export const gameStatusValidator = v.union(
@@ -24,16 +25,20 @@ export const gameStatusValidator = v.union(
 export const gameRoleValidator = v.union(
   v.literal('wolf'),
   v.literal('kittenWolf'),
+  v.literal('shadowWolf'),
   v.literal('seer'),
   v.literal('doctor'),
   v.literal('gunner'),
   v.literal('detective'),
+  v.literal('hunter'),
+  v.literal('jester'),
   v.literal('villager')
 )
 
 export const teamValidator = v.union(
   v.literal('good'),
-  v.literal('bad')
+  v.literal('bad'),
+  v.literal('neutral')
 )
 
 export const actionTypeValidator = v.union(
@@ -43,7 +48,10 @@ export const actionTypeValidator = v.union(
   v.literal('scan'),
   v.literal('shoot'),
   v.literal('investigate'),
-  v.literal('convert')
+  v.literal('convert'),
+  v.literal('mute'),
+  v.literal('revenge'),
+  v.literal('skipMute')
 )
 
 export const chatChannelValidator = v.union(
@@ -70,6 +78,9 @@ export default defineSchema({
     winningTeam: v.optional(v.string()),
     endReason: v.optional(v.string()),
     startCountdownAt: v.optional(v.number()),
+    hunterRevengePlayerId: v.optional(v.id('players')),
+    previousPhase: v.optional(v.string()),
+    jesterWinnerId: v.optional(v.id('players')),
   }).index('by_code', ['roomCode']),
 
   players: defineTable({
@@ -89,6 +100,7 @@ export default defineSchema({
     wasConverted: v.optional(v.boolean()),
     convertedAtTurn: v.optional(v.number()),
     isReady: v.optional(v.boolean()),
+    isMuted: v.optional(v.boolean()),
   })
     .index('by_game', ['gameId'])
     .index('by_game_user', ['gameId', 'userId']),

@@ -219,6 +219,9 @@ export const resetToLobby = mutation({
         isAlive: true,
         roleData: undefined,
         isReady: player.isHost ? true : false,
+        isMuted: undefined,
+        wasConverted: undefined,
+        convertedAtTurn: undefined,
       })
     }
 
@@ -244,6 +247,10 @@ export const resetToLobby = mutation({
       turnNumber: 0,
       phaseEndTime: 0,
       winningTeam: undefined,
+      endReason: undefined,
+      hunterRevengePlayerId: undefined,
+      previousPhase: undefined,
+      jesterWinnerId: undefined,
     })
   },
 })
