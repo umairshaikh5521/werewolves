@@ -230,7 +230,13 @@ function GamePlayScreen() {
 
   const handlePlayerSelect = useCallback(
     (playerId: Id<'players'>) => {
-      if (!game || !myPlayer || !myPlayer.isAlive) return
+      if (!game || !myPlayer) return
+
+      // Allow dead hunter to select a target during revenge phase
+      const isHunterRevenge = game.phase === 'hunter_revenge' && hunterRevengeState?.hunterPlayerId === myPlayer._id
+
+      if (!myPlayer.isAlive && !isHunterRevenge) return
+
       const target = players?.find((p) => p._id === playerId)
       if (!target || !target.isAlive) return
       if (playerId === myPlayer._id && game.phase !== 'night') return
@@ -259,7 +265,7 @@ function GamePlayScreen() {
 
       setSelectedPlayerId((prev) => (prev === playerId ? null : playerId))
     },
-    [game, myPlayer, players, isDetective, selectedPlayerId, selectedPlayerId2]
+    [game, myPlayer, players, isDetective, selectedPlayerId, selectedPlayerId2, hunterRevengeState]
   )
 
   const handleAction = useCallback(async () => {
