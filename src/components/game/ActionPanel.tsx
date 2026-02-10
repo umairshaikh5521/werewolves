@@ -55,14 +55,16 @@ export function ActionPanel({
   const [showBiteConfirm, setShowBiteConfirm] = useState(false)
   if (!isAlive) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-8">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-dead-gray/20">
-          <span className="text-2xl">💀</span>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-dead-gray/20">
+          <span className="text-lg">💀</span>
         </div>
-        <p className="font-display text-sm font-semibold text-dead-gray">
-          You have been eliminated
-        </p>
-        <p className="text-xs text-muted-foreground">Watch your team's chat</p>
+        <div className="min-w-0">
+          <p className="font-display text-sm font-semibold text-dead-gray">
+            You have been eliminated
+          </p>
+          <p className="text-xs text-muted-foreground">Watch your team's chat</p>
+        </div>
       </div>
     )
   }
@@ -88,67 +90,54 @@ export function ActionPanel({
       const canBite = !hasBitten && !hasConverted
 
       return (
-        <div className="flex flex-col items-center gap-4 p-4">
+        <div className="flex flex-col gap-2 px-4 py-3">
           <div className="flex items-center gap-2 text-amber-500">
-            <FangIcon className="h-5 w-5" />
-            <span className="font-display text-sm font-semibold">Kitten Wolf</span>
+            <FangIcon className="h-4 w-4" />
+            <span className="font-display text-xs font-semibold">Kitten Wolf</span>
+            <span className="text-[10px] text-muted-foreground">{canBite ? 'Kill or convert' : 'Vote to kill'}</span>
           </div>
 
           {hasConverted ? (
-            <div className="animate-bounce-in rounded-xl bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-500">
+            <div className="animate-bounce-in rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-500">
               Bite submitted - target will be converted
             </div>
           ) : hasActed ? (
-            <div className="animate-bounce-in rounded-xl bg-village-green/20 px-4 py-2 text-sm font-semibold text-village-green">
+            <div className="animate-bounce-in rounded-lg bg-village-green/20 px-3 py-1.5 text-xs font-semibold text-village-green">
               Kill vote submitted
             </div>
           ) : (
-            <>
-              <p className="text-center text-xs text-muted-foreground">
-                {canBite
-                  ? 'Choose to kill or use your one-time bite to convert a villager'
-                  : 'Your bite ability has been used. Vote to kill.'}
-              </p>
-
-              <div className="flex w-full max-w-xs flex-col gap-2">
-                <button
-                  onClick={onAction}
-                  disabled={!selectedPlayerName}
-                  className={cn(
-                    'game-btn w-full py-3 text-sm font-semibold disabled:opacity-40',
-                    'bg-wolf-red hover:bg-wolf-red/90 text-white'
-                  )}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <Crosshair className="h-4 w-4" />
-                    {selectedPlayerName ? `Kill ${selectedPlayerName}` : 'Select a target'}
-                  </span>
-                </button>
-
-                {canBite && (
-                  <button
-                    onClick={() => setShowBiteConfirm(true)}
-                    disabled={!selectedPlayerName}
-                    className={cn(
-                      'game-btn w-full py-3 text-sm font-semibold disabled:opacity-40',
-                      'bg-amber-500 hover:bg-amber-500/90 text-white',
-                      'border-2 border-amber-400/50'
-                    )}
-                  >
-                    <span className="flex items-center justify-center gap-2">
-                      <FangIcon className="h-4 w-4" />
-                      {selectedPlayerName ? `Bite ${selectedPlayerName}` : 'Select a target'}
-                    </span>
-                  </button>
+            <div className="flex gap-2">
+              <button
+                onClick={onAction}
+                disabled={!selectedPlayerName}
+                className={cn(
+                  'game-btn flex-1 py-2 text-xs font-semibold disabled:opacity-40',
+                  'bg-wolf-red hover:bg-wolf-red/90 text-white'
                 )}
-              </div>
+              >
+                <span className="flex items-center justify-center gap-1.5">
+                  <Crosshair className="h-3.5 w-3.5" />
+                  {selectedPlayerName ? `Kill ${selectedPlayerName}` : 'Select target'}
+                </span>
+              </button>
 
               {canBite && (
-                <p className="text-center text-xs text-amber-500/70">
-                  Bite converts a villager to your team (one-time use)
-                </p>
+                <button
+                  onClick={() => setShowBiteConfirm(true)}
+                  disabled={!selectedPlayerName}
+                  className={cn(
+                    'game-btn flex-1 py-2 text-xs font-semibold disabled:opacity-40',
+                    'bg-amber-500 hover:bg-amber-500/90 text-white',
+                    'border border-amber-400/50'
+                  )}
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    <FangIcon className="h-3.5 w-3.5" />
+                    {selectedPlayerName ? `Bite ${selectedPlayerName}` : 'Select target'}
+                  </span>
+                </button>
               )}
-            </>
+            </div>
           )}
 
           <AlertDialog open={showBiteConfirm} onOpenChange={setShowBiteConfirm}>
@@ -276,14 +265,16 @@ export function ActionPanel({
     }
 
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-8">
-        <div className="animate-float flex h-14 w-14 items-center justify-center rounded-full bg-seer-blue/10">
-          <Moon className="h-7 w-7 text-seer-blue" />
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="animate-float flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-seer-blue/10">
+          <Moon className="h-5 w-5 text-seer-blue" />
         </div>
-        <p className="font-display text-sm font-semibold text-foreground">Sleeping...</p>
-        <p className="text-xs text-muted-foreground">
-          The night is dark. Wait for dawn.
-        </p>
+        <div className="min-w-0">
+          <p className="font-display text-sm font-semibold text-foreground">Sleeping...</p>
+          <p className="text-xs text-muted-foreground">
+            The night is dark. Wait for dawn.
+          </p>
+        </div>
       </div>
     )
   }
@@ -306,51 +297,50 @@ export function ActionPanel({
 
   if (role === 'gunner' && (bullets ?? 0) > 0) {
     return (
-      <div className="flex flex-col items-center gap-3 p-4">
-        <div className="flex items-center gap-2 text-foreground">
-          <GunIcon className="h-5 w-5" />
-          <span className="font-display text-sm font-semibold">Armed & Dangerous</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: bullets ?? 0 }).map((_, i) => (
-            <div key={i} className="h-3 w-1.5 rounded-full bg-moon-gold" />
-          ))}
-          <span className="ml-1 text-xs text-muted-foreground">
-            {bullets} bullet{(bullets ?? 0) !== 1 ? 's' : ''} remaining
-          </span>
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <div className="flex items-center gap-2">
+          <GunIcon className="h-4 w-4 text-foreground" />
+          <span className="font-display text-xs font-semibold text-foreground">Armed & Dangerous</span>
+          <div className="flex items-center gap-1 ml-auto">
+            {Array.from({ length: bullets ?? 0 }).map((_, i) => (
+              <div key={i} className="h-2.5 w-1.5 rounded-full bg-moon-gold" />
+            ))}
+            <span className="ml-1 text-[10px] text-muted-foreground">
+              {bullets} bullet{(bullets ?? 0) !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
         {hasShot ? (
-          <div className="animate-bounce-in rounded-xl bg-wolf-red/20 px-4 py-2 text-sm font-semibold text-wolf-red">
+          <div className="animate-bounce-in rounded-lg bg-wolf-red/20 px-3 py-1.5 text-xs font-semibold text-wolf-red">
             Shot fired this round
           </div>
         ) : (
-          <>
-            <p className="text-xs text-muted-foreground">Select a player and shoot during discussion</p>
-            <button
-              onClick={onShoot}
-              disabled={!selectedPlayerName}
-              className={cn(
-                'game-btn w-full max-w-xs py-3 text-sm font-semibold disabled:opacity-40',
-                'bg-wolf-red hover:bg-wolf-red/90 text-white'
-              )}
-            >
-              {selectedPlayerName ? `Shoot ${selectedPlayerName}` : 'Select a target'}
-            </button>
-          </>
+          <button
+            onClick={onShoot}
+            disabled={!selectedPlayerName}
+            className={cn(
+              'game-btn w-full py-2 text-xs font-semibold disabled:opacity-40',
+              'bg-wolf-red hover:bg-wolf-red/90 text-white'
+            )}
+          >
+            {selectedPlayerName ? `Shoot ${selectedPlayerName}` : 'Select a target'}
+          </button>
         )}
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-8">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-moon-gold/10">
-        <Sun className="h-7 w-7 text-moon-gold" />
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-moon-gold/10">
+        <Sun className="h-5 w-5 text-moon-gold" />
       </div>
-      <p className="font-display text-sm font-semibold text-foreground">Discussion Time</p>
-      <p className="text-xs text-muted-foreground">
-        Talk with the village. Who seems suspicious?
-      </p>
+      <div className="min-w-0">
+        <p className="font-display text-sm font-semibold text-foreground">Discussion Time</p>
+        <p className="text-xs text-muted-foreground">
+          Talk with the village. Who seems suspicious?
+        </p>
+      </div>
     </div>
   )
 }
@@ -417,14 +407,14 @@ function NightAction({
   actedMessage,
 }: NightActionProps) {
   return (
-    <div className="flex flex-col items-center gap-3 p-4">
+    <div className="flex flex-col gap-2 px-4 py-3">
       <div className="flex items-center gap-2 text-foreground">
         {icon}
-        <span className="font-display text-sm font-semibold">{title}</span>
+        <span className="font-display text-xs font-semibold">{title}</span>
+        <span className="text-[10px] text-muted-foreground">{description}</span>
       </div>
-      <p className="text-xs text-muted-foreground">{description}</p>
       {hasActed ? (
-        <div className="animate-bounce-in rounded-xl bg-village-green/20 px-4 py-2 text-sm font-semibold text-village-green">
+        <div className="animate-bounce-in rounded-lg bg-village-green/20 px-3 py-1.5 text-xs font-semibold text-village-green">
           {actedMessage}
         </div>
       ) : (
@@ -432,7 +422,7 @@ function NightAction({
           onClick={onAction}
           disabled={!selectedPlayerName}
           className={cn(
-            'game-btn w-full max-w-xs py-3 text-sm font-semibold disabled:opacity-40',
+            'game-btn w-full py-2 text-xs font-semibold disabled:opacity-40',
             actionColor
           )}
         >
@@ -459,31 +449,28 @@ function DetectiveAction({
   const bothSelected = selectedPlayerName && selectedPlayerName2
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4">
+    <div className="flex flex-col gap-2 px-4 py-3">
       <div className="flex items-center gap-2 text-foreground">
-        <Search className="h-5 w-5" />
-        <span className="font-display text-sm font-semibold">Investigate</span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Select two players to compare their allegiance
-      </p>
-      <div className="flex items-center gap-2 text-xs">
-        <span className={cn(
-          'rounded-lg border px-3 py-1.5 font-semibold',
-          selectedPlayerName ? 'border-moon-gold/50 bg-moon-gold/10 text-moon-gold' : 'border-border bg-secondary text-muted-foreground'
-        )}>
-          {selectedPlayerName || 'Player 1'}
-        </span>
-        <span className="text-muted-foreground">vs</span>
-        <span className={cn(
-          'rounded-lg border px-3 py-1.5 font-semibold',
-          selectedPlayerName2 ? 'border-moon-gold/50 bg-moon-gold/10 text-moon-gold' : 'border-border bg-secondary text-muted-foreground'
-        )}>
-          {selectedPlayerName2 || 'Player 2'}
-        </span>
+        <Search className="h-4 w-4" />
+        <span className="font-display text-xs font-semibold">Investigate</span>
+        <div className="flex items-center gap-1.5 ml-auto text-[10px]">
+          <span className={cn(
+            'rounded border px-2 py-0.5 font-semibold',
+            selectedPlayerName ? 'border-moon-gold/50 bg-moon-gold/10 text-moon-gold' : 'border-border bg-secondary text-muted-foreground'
+          )}>
+            {selectedPlayerName || 'P1'}
+          </span>
+          <span className="text-muted-foreground">vs</span>
+          <span className={cn(
+            'rounded border px-2 py-0.5 font-semibold',
+            selectedPlayerName2 ? 'border-moon-gold/50 bg-moon-gold/10 text-moon-gold' : 'border-border bg-secondary text-muted-foreground'
+          )}>
+            {selectedPlayerName2 || 'P2'}
+          </span>
+        </div>
       </div>
       {hasActed ? (
-        <div className="animate-bounce-in rounded-xl bg-village-green/20 px-4 py-2 text-sm font-semibold text-village-green">
+        <div className="animate-bounce-in rounded-lg bg-village-green/20 px-3 py-1.5 text-xs font-semibold text-village-green">
           Investigation submitted
         </div>
       ) : (
@@ -491,7 +478,7 @@ function DetectiveAction({
           onClick={onInvestigate}
           disabled={!bothSelected}
           className={cn(
-            'game-btn w-full max-w-xs py-3 text-sm font-semibold disabled:opacity-40',
+            'game-btn w-full py-2 text-xs font-semibold disabled:opacity-40',
             'bg-moon-gold hover:bg-moon-gold/90 text-primary-foreground'
           )}
         >

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Skull, Crown, User, Check, X } from 'lucide-react'
+import { Skull, Crown, User, Check } from 'lucide-react'
 import { getPlayerColor } from '@/lib/role-config'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
@@ -19,6 +19,7 @@ interface PlayerAvatarProps {
   size?: 'xs' | 'sm' | 'md' | 'lg'
   playerIndex?: number
   isWolfTeammate?: boolean
+  isSelfWolf?: boolean
 }
 
 const roleColors: Record<string, string> = {
@@ -56,6 +57,7 @@ export function PlayerAvatar({
   size = 'md',
   playerIndex = 0,
   isWolfTeammate = false,
+  isSelfWolf = false,
 }: PlayerAvatarProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
@@ -102,9 +104,13 @@ export function PlayerAvatar({
             sizeClasses[size],
             isWolfTeammate && isAlive
               ? 'border-[#EF4444] bg-[#EF4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
-              : isAlive
-                ? 'border-border bg-card'
-                : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
+              : showReadyStatus && !(isReady || isHost)
+                ? 'border-red-500 bg-red-500/5 shadow-[0_0_10px_rgba(239,68,68,0.35)] animate-pulse'
+                : showReadyStatus && (isReady || isHost)
+                  ? 'border-green-500 bg-green-500/5'
+                  : isAlive
+                    ? 'border-border bg-card'
+                    : 'border-dead-gray/50 bg-dead-gray/20 opacity-60',
             isSelected && isAlive && 'border-primary animate-pulse-glow',
             isCurrentPlayer && isAlive && 'ring-2 ring-moon-gold/40',
             onClick && isAlive && 'cursor-pointer hover:border-primary/60 active:scale-95',
@@ -115,26 +121,7 @@ export function PlayerAvatar({
             <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
           )}
 
-          {isWolfTeammate && isAlive && role && (
-            <div className="absolute -top-1 -left-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#EF4444] border border-white">
-              <span className="text-sm">{role === 'wolf' ? '🐺' : '🐱'}</span>
-            </div>
-          )}
 
-          {showReadyStatus && !isWolfTeammate && (
-            <div
-              className={cn(
-                'absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full',
-                isReady || isHost ? 'bg-green-500' : 'bg-red-500'
-              )}
-            >
-              {isReady || isHost ? (
-                <Check className="h-3 w-3 text-white" />
-              ) : (
-                <X className="h-3 w-3 text-white" />
-              )}
-            </div>
-          )}
 
           {hasVoted && (
             <div className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500">
@@ -148,13 +135,17 @@ export function PlayerAvatar({
               avatarSizeClasses[size],
               showRole && role
                 ? roleColors[role]
-                : isAlive
-                  ? 'bg-secondary border-border'
-                  : 'bg-dead-gray/30 border-dead-gray/50'
+                : (isWolfTeammate || isSelfWolf) && isAlive
+                  ? 'bg-wolf-red/20 border-wolf-red'
+                  : isAlive
+                    ? 'bg-secondary border-border'
+                    : 'bg-dead-gray/30 border-dead-gray/50'
             )}
           >
             {showRole && role ? (
               <span className={iconSizeClasses[size]}>{roleIcons[role]}</span>
+            ) : (isWolfTeammate || isSelfWolf) && isAlive ? (
+              <span className={iconSizeClasses[size]}>{role === 'kittenWolf' ? '🐾' : '🐺'}</span>
             ) : !isAlive ? (
               <Skull className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-dead-gray')} />
             ) : (

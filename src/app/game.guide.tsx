@@ -12,10 +12,10 @@ const roleDistribution = [
   { players: 6, wolves: 1, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
   { players: 7, wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, villagers: 2 },
   { players: 8, wolves: 2, kittenWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
-  { players: 9, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 2 },
-  { players: 10, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
+  { players: 9, wolves: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 3 },
+  { players: 10, wolves: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
   { players: 11, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
-  { players: 12, wolves: 3, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 4 },
+  { players: 12, wolves: 2, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, villagers: 5 },
 ]
 
 function GameGuide() {

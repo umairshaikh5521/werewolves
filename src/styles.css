@@ -171,13 +171,13 @@ body {
 
 .game-btn {
   position: relative;
-  border-radius: 16px;
+  border-radius: 10px;
   font-family: 'Fredoka', sans-serif;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   transition: all 0.15s ease;
-  border-bottom: 4px solid rgba(0,0,0,0.25);
+  border-bottom: 3px solid rgba(0,0,0,0.25);
 }
 .game-btn:active {
   border-bottom-width: 2px;

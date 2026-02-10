@@ -6,6 +6,9 @@ interface PhaseIndicatorProps {
   phase: 'night' | 'day' | 'voting'
   phaseEndTime: number
   turnNumber: number
+  role?: string
+  bullets?: number
+  onRoleClick?: () => void
 }
 
 const phaseConfig = {
@@ -35,7 +38,7 @@ const phaseConfig = {
   },
 }
 
-export function PhaseIndicator({ phase, phaseEndTime, turnNumber }: PhaseIndicatorProps) {
+export function PhaseIndicator({ phase, phaseEndTime, turnNumber, role, bullets, onRoleClick }: PhaseIndicatorProps) {
   const timeLeft = useGameTimer(phaseEndTime)
   const config = phaseConfig[phase]
   const Icon = config.icon
@@ -43,26 +46,58 @@ export function PhaseIndicator({ phase, phaseEndTime, turnNumber }: PhaseIndicat
   return (
     <div
       className={cn(
-        'flex items-center justify-between rounded-2xl border-2 px-4 py-2.5',
+        'relative flex items-center justify-between rounded-xl border-2 px-3 py-2',
         config.bg,
         config.border
       )}
     >
       <div className="flex items-center gap-2">
-        <Icon className={cn('h-5 w-5', config.iconColor)} />
-        <span className="font-display text-sm font-semibold uppercase tracking-wide text-foreground">
+        <Icon className={cn('h-4 w-4', config.iconColor)} />
+        <span className="font-display text-xs font-semibold uppercase tracking-wide text-foreground">
           {config.label} {turnNumber}
         </span>
       </div>
+
+      {role && (
+        <button onClick={onRoleClick} className="absolute left-1/2 -translate-x-1/2">
+          <RoleBadgeInline role={role} bullets={bullets} />
+        </button>
+      )}
+
       <div
         className={cn(
-          'font-display text-2xl font-bold tabular-nums',
+          'font-display text-xl font-bold tabular-nums',
           config.timerColor,
           timeLeft <= 5 && 'animate-pulse'
         )}
       >
         {timeLeft > 0 ? `${timeLeft}s` : '...'}
       </div>
+    </div>
+  )
+}
+
+const roleStyles: Record<string, { bg: string; text: string; icon: string }> = {
+  wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
+  kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾' },
+  seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
+  doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
+  gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
+  detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
+  villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
+}
+
+function RoleBadgeInline({ role, bullets }: { role: string; bullets?: number }) {
+  const c = roleStyles[role] || roleStyles.villager
+  return (
+    <div className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 ${c.bg}`}>
+      <span className="text-[10px]">{c.icon}</span>
+      <span className={`font-display text-[10px] font-semibold capitalize ${c.text}`}>
+        {role === 'kittenWolf' ? 'Kitten' : role}
+      </span>
+      {role === 'gunner' && bullets !== undefined && (
+        <span className="text-[9px] text-muted-foreground">x{bullets}</span>
+      )}
     </div>
   )
 }

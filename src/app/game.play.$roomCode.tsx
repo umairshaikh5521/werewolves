@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { getGuestId } from '@/lib/guest-identity'
+import { cn } from '@/lib/utils'
 import { playSound, playCountdown, stopCountdown } from '@/lib/sounds'
 import { PhaseIndicator } from '@/components/game/PhaseIndicator'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
@@ -82,12 +83,24 @@ function GamePlayScreen() {
   const [showRoleReveal, setShowRoleReveal] = useState(false)
   const [showConversionOverlay, setShowConversionOverlay] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+  const [chatChannel, setChatChannel] = useState<'global' | 'wolves'>('global')
   const roleRevealShown = useRef(false)
   const conversionShown = useRef(false)
   const previousPhase = useRef<string | null>(null)
   const gameEndedSoundPlayed = useRef(false)
   const clockRunning = useRef(false)
   const previousShootCount = useRef<number | null>(null)
+
+  // Auto-switch chat channel for wolves based on phase
+  useEffect(() => {
+    if (!game || !myPlayer) return
+    const isWolf = myPlayer.team === 'bad'
+    if (isWolf && game.phase === 'night') {
+      setChatChannel('wolves')
+    } else if (isWolf && game.phase !== 'night') {
+      setChatChannel('global')
+    }
+  }, [game?.phase, myPlayer?.team])
 
   // Play gunshot sound when any player shoots (for all clients)
   useEffect(() => {
@@ -320,8 +333,8 @@ function GamePlayScreen() {
       let channel: 'global' | 'wolves' | 'dead'
       if (!myPlayer.isAlive) {
         channel = 'dead'
-      } else if (game.phase === 'night' && (myPlayer.role === 'wolf' || myPlayer.role === 'kittenWolf')) {
-        channel = 'wolves'
+      } else if (myPlayer.team === 'bad') {
+        channel = chatChannel
       } else {
         channel = 'global'
       }
@@ -337,7 +350,7 @@ function GamePlayScreen() {
         // send failed
       }
     },
-    [game, myPlayer, sendMessage]
+    [game, myPlayer, sendMessage, chatChannel]
   )
 
   const handleBackToHome = () => {
@@ -460,30 +473,24 @@ function GamePlayScreen() {
   const isWolfTeam = myPlayer.team === 'bad'
   const chatDisabled =
     !myPlayer.isAlive ||
-    (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive)
+    (game.phase === 'night' && !isWolfTeam && myPlayer.isAlive) ||
+    (game.phase === 'night' && isWolfTeam && chatChannel === 'global') ||
+    (game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves')
 
-  const currentChannel: 'global' | 'wolves' =
-    isWolfTeam && (game.phase === 'night' || !myPlayer.isAlive)
-      ? 'wolves'
-      : 'global'
+  const currentChannel = isWolfTeam ? chatChannel : 'global'
 
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
-      <div className="shrink-0 px-4 pt-4 pb-2">
+      <div className="shrink-0 px-4 pt-3 pb-1">
         <PhaseIndicator
           phase={game.phase}
           phaseEndTime={game.phaseEndTime}
           turnNumber={game.turnNumber}
+          role={myPlayer.role || undefined}
+          bullets={myPlayer.roleData?.bullets}
+          onRoleClick={() => setShowRoleReveal(true)}
         />
       </div>
-
-      {myPlayer.isAlive && myPlayer.role && (
-        <div className="flex justify-center pb-1">
-          <button onClick={() => setShowRoleReveal(true)}>
-            <RoleBadge role={myPlayer.role} bullets={myPlayer.roleData?.bullets} />
-          </button>
-        </div>
-      )}
 
       <div className="shrink-0 px-2 py-2">
         <div className={`grid gap-1 justify-items-center ${players.length > 10 ? 'grid-cols-6' : 'grid-cols-5'}`}>
@@ -505,7 +512,7 @@ function GamePlayScreen() {
                 isSelected={selectedPlayerId === player._id || isSecondSelected}
                 isCurrentPlayer={player._id === myPlayer._id}
                 hasVoted={hasVoted}
-                role={isRevealed ? player.role ?? undefined : isMyWolfTeammate ? player.role ?? undefined : undefined}
+                role={isRevealed ? player.role ?? undefined : isMyWolfTeammate ? player.role ?? undefined : player._id === myPlayer._id ? myPlayer.role ?? undefined : undefined}
                 showRole={!!isRevealed}
                 onClick={
                   player._id !== myPlayer._id && player.isAlive
@@ -517,6 +524,7 @@ function GamePlayScreen() {
                 size="xs"
                 playerIndex={index}
                 isWolfTeammate={isMyWolfTeammate}
+                isSelfWolf={player._id === myPlayer._id && myPlayer.team === 'bad'}
               />
             )
           })}
@@ -564,6 +572,34 @@ function GamePlayScreen() {
             </div>
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
           </button>
+
+          {isWolfTeam && myPlayer.isAlive && (
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setChatChannel('global')}
+                className={cn(
+                  'flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                  chatChannel === 'global'
+                    ? 'bg-secondary text-foreground'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground/70'
+                )}
+              >
+                🏘️ Village
+              </button>
+              <button
+                onClick={() => setChatChannel('wolves')}
+                className={cn(
+                  'flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                  chatChannel === 'wolves'
+                    ? 'bg-wolf-red/20 text-wolf-red'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground/70'
+                )}
+              >
+                🐺 Wolves
+              </button>
+            </div>
+          )}
+
           <div className="flex-1" style={{ minHeight: 0 }}>
             <GameChat
               messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
@@ -571,9 +607,13 @@ function GamePlayScreen() {
               currentChannel={currentChannel}
               disabled={chatDisabled}
               placeholder={
-                currentChannel === 'wolves'
-                  ? 'Wolf chat...'
-                  : 'Message the village...'
+                chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
+                  ? 'Village chat disabled at night'
+                  : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
+                    ? 'Wolf chat disabled during the day'
+                    : currentChannel === 'wolves'
+                      ? 'Wolf chat...'
+                      : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
@@ -596,6 +636,34 @@ function GamePlayScreen() {
               )}
             </SheetTitle>
           </SheetHeader>
+
+          {isWolfTeam && myPlayer.isAlive && (
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setChatChannel('global')}
+                className={cn(
+                  'flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors',
+                  chatChannel === 'global'
+                    ? 'bg-secondary text-foreground'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground/70'
+                )}
+              >
+                🏘️ Village
+              </button>
+              <button
+                onClick={() => setChatChannel('wolves')}
+                className={cn(
+                  'flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors',
+                  chatChannel === 'wolves'
+                    ? 'bg-wolf-red/20 text-wolf-red'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground/70'
+                )}
+              >
+                🐺 Wolves
+              </button>
+            </div>
+          )}
+
           <div className="flex-1" style={{ minHeight: 0 }}>
             <GameChat
               messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
@@ -603,9 +671,13 @@ function GamePlayScreen() {
               currentChannel={currentChannel}
               disabled={chatDisabled}
               placeholder={
-                currentChannel === 'wolves'
-                  ? 'Wolf chat...'
-                  : 'Message the village...'
+                chatDisabled && game.phase === 'night' && isWolfTeam && chatChannel === 'global'
+                  ? 'Village chat disabled at night'
+                  : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
+                    ? 'Wolf chat disabled during the day'
+                    : currentChannel === 'wolves'
+                      ? 'Wolf chat...'
+                      : 'Message the village...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
@@ -623,32 +695,6 @@ function GamePlayScreen() {
 
       {showConversionOverlay && (
         <ConversionOverlay onDismiss={() => setShowConversionOverlay(false)} />
-      )}
-    </div>
-  )
-}
-
-function RoleBadge({ role, bullets }: { role: string; bullets?: number }) {
-  const config: Record<string, { bg: string; text: string; icon: string }> = {
-    wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
-    kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾' },
-    seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
-    doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
-    gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
-    detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
-    villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
-  }
-  const c = config[role] || config.villager
-  return (
-    <div
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${c.bg}`}
-    >
-      <span className="text-xs">{c.icon}</span>
-      <span className={`font-display text-xs font-semibold capitalize ${c.text}`}>
-        {role}
-      </span>
-      {role === 'gunner' && bullets !== undefined && (
-        <span className="ml-0.5 text-[10px] text-muted-foreground">x{bullets}</span>
       )}
     </div>
   )

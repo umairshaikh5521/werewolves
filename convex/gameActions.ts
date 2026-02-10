@@ -60,6 +60,10 @@ export const submitAction = mutation({
         await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, existingAction)
       }
 
+      if (game.phase === 'night' && ['kill', 'save', 'scan'].includes(args.type)) {
+        await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, existingAction)
+      }
+
       return duplicate._id
     }
 
@@ -72,16 +76,22 @@ export const submitAction = mutation({
       targetId: args.targetId,
     })
 
+    const allActions = [...existingAction, {
+      _id: actionId,
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: args.type,
+      actorId: args.playerId,
+      targetId: args.targetId,
+    }]
+
     if (args.type === 'vote' && game.phase === 'voting') {
-      await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, [...existingAction, {
-        _id: actionId,
-        gameId: args.gameId,
-        turnNumber: game.turnNumber,
-        phase: game.phase,
-        type: args.type,
-        actorId: args.playerId,
-        targetId: args.targetId,
-      }])
+      await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, allActions)
+    }
+
+    if (game.phase === 'night' && ['kill', 'save', 'scan'].includes(args.type)) {
+      await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, allActions)
     }
 
     return actionId
@@ -104,6 +114,36 @@ async function checkAndTriggerEarlyVotingEnd(ctx: any, gameId: any, game: any, a
       gameId,
       expectedTurn: game.turnNumber,
       expectedPhase: 'voting',
+    })
+  }
+}
+
+async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, actions: any[]) {
+  const players = await ctx.db
+    .query('players')
+    .withIndex('by_game', (q: any) => q.eq('gameId', gameId))
+    .collect()
+
+  const alivePlayers = players.filter((p: any) => p.isAlive)
+
+  // Determine which players need to act at night
+  const nightActors = alivePlayers.filter((p: any) => {
+    const role = p.role
+    return role === 'wolf' || role === 'kittenWolf' || role === 'seer' || role === 'doctor' || role === 'detective'
+  })
+
+  // Check if each night actor has submitted an action
+  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert']
+  const nightActions = actions.filter((a: any) => nightActionTypes.includes(a.type) && a.phase === 'night')
+  const actedPlayerIds = new Set(nightActions.map((a: any) => a.actorId.toString()))
+
+  const allActed = nightActors.every((p: any) => actedPlayerIds.has(p._id.toString()))
+
+  if (allActed && nightActors.length > 0) {
+    await ctx.scheduler.runAfter(0, internal.gameEngine.transitionPhase, {
+      gameId,
+      expectedTurn: game.turnNumber,
+      expectedPhase: 'night',
     })
   }
 }
@@ -246,6 +286,15 @@ export const investigatePlayers = mutation({
       })
     }
 
+    // Check for early night end after detective investigates
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
     const sameTeam = p1.team === p2.team
     return { sameTeam, target1Name: p1.name, target2Name: p2.name }
   },
@@ -380,7 +429,7 @@ export const convertPlayer = mutation({
       await ctx.db.delete(killAction._id)
     }
 
-    return await ctx.db.insert('actions', {
+    const convertId = await ctx.db.insert('actions', {
       gameId: args.gameId,
       turnNumber: game.turnNumber,
       phase: game.phase,
@@ -388,6 +437,17 @@ export const convertPlayer = mutation({
       actorId: args.playerId,
       targetId: args.targetId,
     })
+
+    // Check for early night end after convert
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return convertId
   },
 })
 
