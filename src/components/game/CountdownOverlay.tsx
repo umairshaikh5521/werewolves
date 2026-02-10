@@ -20,9 +20,9 @@ const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     7: { wolf: 2, seer: 1, doctor: 1, gunner: 1, hunter: 1, villager: 1 },
     8: { wolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, villager: 1 },
     9: { wolf: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, hunter: 1, jester: 1, villager: 2 },
-    10: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 1 },
-    11: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 2 },
-    12: { wolf: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 3 },
+    10: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 2 },
+    11: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 3 },
+    12: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 4 },
 }
 
 const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {

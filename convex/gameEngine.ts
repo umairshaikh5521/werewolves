@@ -25,9 +25,9 @@ const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
   7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 0, villagers: 1 },
   8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 0, villagers: 1 },
   9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 1, villagers: 2 },
-  10: { wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 1 },
-  11: { wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
-  12: { wolves: 1, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 3 },
+  10: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
+  11: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 3 },
+  12: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 4 },
 }
 
 // Dynamic durations based on player count
