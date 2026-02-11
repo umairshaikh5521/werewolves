@@ -31,7 +31,7 @@ export const ROLE_META: Record<string, { emoji: string; color: string; label: st
     kittenWolf: { emoji: '🐾', color: 'text-amber-500', label: 'Kitten', image: '/assets/icons/kitten-wolf-icon.webp' },
     shadowWolf: { emoji: '👤', color: 'text-violet-500', label: 'Shadow', image: '/assets/icons/shadow-wolf-icon.webp' },
     seer: { emoji: '🔮', color: 'text-blue-400', label: 'Seer', image: '/assets/icons/seer-icon.webp' },
-    doctor: { emoji: '💊', color: 'text-green-400', label: 'Doctor' },
+    doctor: { emoji: '💊', color: 'text-green-400', label: 'Doctor', image: '/assets/icons/doctor-icon.webp' },
     gunner: { emoji: '🔫', color: 'text-yellow-500', label: 'Gunner', image: '/assets/icons/gunner-icon.webp' },
     detective: { emoji: '🕵️', color: 'text-yellow-500', label: 'Detective', image: '/assets/icons/detective-icon.webp' },
     hunter: { emoji: '🏹', color: 'text-orange-500', label: 'Hunter', image: '/assets/icons/hunter-icon.webp' },

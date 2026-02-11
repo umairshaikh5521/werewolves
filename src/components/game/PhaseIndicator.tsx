@@ -90,7 +90,7 @@ const roleStyles: Record<string, { bg: string; text: string; icon: string; image
   kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾', image: '/assets/icons/kitten-wolf-icon.webp' },
   shadowWolf: { bg: 'bg-violet-500/20 border-violet-500/40', text: 'text-violet-500', icon: '👤', image: '/assets/icons/shadow-wolf-icon.webp' },
   seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮', image: '/assets/icons/seer-icon.webp' },
-  doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
+  doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊', image: '/assets/icons/doctor-icon.webp' },
   gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫', image: '/assets/icons/gunner-icon.webp' },
   detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️', image: '/assets/icons/detective-icon.webp' },
   hunter: { bg: 'bg-orange-500/20 border-orange-500/40', text: 'text-orange-500', icon: '🏹', image: '/assets/icons/hunter-icon.webp' },

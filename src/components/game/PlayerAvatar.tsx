@@ -58,6 +58,7 @@ const roleAssets: Record<string, string> = {
   hunter: '/assets/icons/hunter-icon.webp',
   revenant: '/assets/icons/revenant-icon.webp',
   villager: '/assets/icons/villager-icon.webp',
+  doctor: '/assets/icons/doctor-icon.webp',
 }
 
 export function PlayerAvatar({
@@ -87,10 +88,10 @@ export function PlayerAvatar({
   }
 
   const avatarSizeClasses = {
-    xs: 'h-9 w-9',
-    sm: 'h-10 w-10',
-    md: 'h-12 w-12',
-    lg: 'h-14 w-14',
+    xs: 'h-10 w-10',
+    sm: 'h-12 w-12',
+    md: 'h-14 w-14',
+    lg: 'h-16 w-16',
   }
 
   const textSizeClasses = {
