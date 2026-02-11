@@ -48,10 +48,16 @@ const roleIcons: Record<string, string> = {
   villager: '🏠',
 }
 
-const wolfIcons: Record<string, string> = {
+const roleAssets: Record<string, string> = {
   wolf: '/assets/icons/werewolf-icon.webp',
   kittenWolf: '/assets/icons/kitten-wolf-icon.webp',
   shadowWolf: '/assets/icons/shadow-wolf-icon.webp',
+  seer: '/assets/icons/seer-icon.webp',
+  gunner: '/assets/icons/gunner-icon.webp',
+  detective: '/assets/icons/detective-icon.webp',
+  hunter: '/assets/icons/hunter-icon.webp',
+  revenant: '/assets/icons/revenant-icon.webp',
+  villager: '/assets/icons/villager-icon.webp',
 }
 
 export function PlayerAvatar({
@@ -81,10 +87,10 @@ export function PlayerAvatar({
   }
 
   const avatarSizeClasses = {
-    xs: 'h-6 w-6',
-    sm: 'h-7 w-7',
-    md: 'h-8 w-8',
-    lg: 'h-10 w-10',
+    xs: 'h-9 w-9',
+    sm: 'h-10 w-10',
+    md: 'h-12 w-12',
+    lg: 'h-14 w-14',
   }
 
   const textSizeClasses = {
@@ -112,7 +118,7 @@ export function PlayerAvatar({
           }}
           disabled={!onClick}
           className={cn(
-            'relative flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 p-1.5 transition-all',
+            'relative flex flex-col items-center justify-center gap-0.5 rounded-lg border-2 p-0.5 transition-all',
             sizeClasses[size],
             isWolfTeammate && isAlive
               ? 'border-[#EF4444] bg-[#EF4444]/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]'
@@ -154,26 +160,26 @@ export function PlayerAvatar({
                     : 'bg-dead-gray/30 border-dead-gray/50'
             )}
           >
-            {showRole && role && wolfIcons[role] ? (
+            {showRole && role && roleAssets[role] ? (
               <img
-                src={wolfIcons[role]}
+                src={roleAssets[role]}
                 alt={role}
-                className={cn('object-contain opacity-90', size === 'xs' ? 'h-5 w-5' : size === 'sm' ? 'h-6 w-6' : 'h-7 w-7')}
+                className="h-full w-full object-contain p-1 opacity-90"
               />
             ) : showRole && role ? (
               <span className={iconSizeClasses[size]}>{roleIcons[role]}</span>
-            ) : (isWolfTeammate || isSelfWolf) && isAlive && role && wolfIcons[role] ? (
+            ) : (isWolfTeammate || isSelfWolf) && isAlive && role && roleAssets[role] ? (
               <img
-                src={wolfIcons[role]}
+                src={roleAssets[role]}
                 alt={role}
-                className={cn('object-contain opacity-90', size === 'xs' ? 'h-5 w-5' : size === 'sm' ? 'h-6 w-6' : 'h-7 w-7')}
+                className="h-full w-full object-contain p-1 opacity-90"
               />
             ) : (isWolfTeammate || isSelfWolf) && isAlive ? (
               <span className={iconSizeClasses[size]}>{role === 'kittenWolf' ? '🐾' : role === 'shadowWolf' ? '👤' : '🐺'}</span>
             ) : !isAlive ? (
-              <Skull className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-dead-gray')} />
+              <Skull className={cn(size === 'xs' ? 'h-4 w-4' : 'h-5 w-5', 'text-dead-gray')} />
             ) : (
-              <User className={cn(size === 'xs' ? 'h-3 w-3' : 'h-4 w-4', 'text-muted-foreground')} />
+              <User className={cn(size === 'xs' ? 'h-4 w-4' : 'h-5 w-5', 'text-muted-foreground')} />
             )}
           </div>
 

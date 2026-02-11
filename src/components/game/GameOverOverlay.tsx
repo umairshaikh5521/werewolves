@@ -34,7 +34,7 @@ export function GameOverOverlay({
   const isVillageWin = winningTeam === 'good'
 
   const iconBg = isVillageWin ? 'bg-village-green/20' : 'bg-wolf-red/20'
-  const icon = isVillageWin ? '🏘️' : '/assets/icons/werewolf-icon.webp'
+  const icon = isVillageWin ? '/assets/icons/villager-icon.webp' : '/assets/icons/werewolf-icon.webp'
   const titleColor = isVillageWin ? 'text-village-green' : 'text-wolf-red'
   const title = isVillageWin ? 'Village Wins!' : 'Werewolves Win!'
   const fallbackReason = isVillageWin
@@ -46,15 +46,11 @@ export function GameOverOverlay({
       <div className="animate-bounce-in flex w-full max-w-sm flex-col items-center gap-6">
         <div
           className={cn(
-            'flex h-24 w-24 items-center justify-center rounded-full overflow-hidden',
+            'flex h-24 w-24 items-center justify-center rounded-full overflow-hidden p-3',
             iconBg
           )}
         >
-          {!isVillageWin ? (
-            <img src={icon} alt="Werewolves" className="h-16 w-16 object-contain opacity-90" />
-          ) : (
-            <span className="text-5xl">{icon}</span>
-          )}
+          <img src={icon} alt={isVillageWin ? 'Village' : 'Werewolves'} className="h-full w-full object-contain opacity-90" />
         </div>
 
         <div className="text-center">

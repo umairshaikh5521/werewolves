@@ -85,24 +85,28 @@ export function PhaseIndicator({ phase, phaseEndTime, turnNumber, role, bullets,
   )
 }
 
-const roleStyles: Record<string, { bg: string; text: string; icon: string }> = {
-  wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺' },
-  kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾' },
-  shadowWolf: { bg: 'bg-violet-500/20 border-violet-500/40', text: 'text-violet-500', icon: '👤' },
-  seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮' },
+const roleStyles: Record<string, { bg: string; text: string; icon: string; image?: string }> = {
+  wolf: { bg: 'bg-wolf-red/20 border-wolf-red/40', text: 'text-wolf-red', icon: '🐺', image: '/assets/icons/werewolf-icon.webp' },
+  kittenWolf: { bg: 'bg-amber-500/20 border-amber-500/40', text: 'text-amber-500', icon: '🐾', image: '/assets/icons/kitten-wolf-icon.webp' },
+  shadowWolf: { bg: 'bg-violet-500/20 border-violet-500/40', text: 'text-violet-500', icon: '👤', image: '/assets/icons/shadow-wolf-icon.webp' },
+  seer: { bg: 'bg-seer-blue/20 border-seer-blue/40', text: 'text-seer-blue', icon: '🔮', image: '/assets/icons/seer-icon.webp' },
   doctor: { bg: 'bg-doctor-green/20 border-doctor-green/40', text: 'text-doctor-green', icon: '💊' },
-  gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
-  detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
-  hunter: { bg: 'bg-orange-500/20 border-orange-500/40', text: 'text-orange-500', icon: '🏹' },
-  revenant: { bg: 'bg-teal-400/20 border-teal-400/40', text: 'text-teal-400', icon: '👻' },
-  villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
+  gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫', image: '/assets/icons/gunner-icon.webp' },
+  detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️', image: '/assets/icons/detective-icon.webp' },
+  hunter: { bg: 'bg-orange-500/20 border-orange-500/40', text: 'text-orange-500', icon: '🏹', image: '/assets/icons/hunter-icon.webp' },
+  revenant: { bg: 'bg-teal-400/20 border-teal-400/40', text: 'text-teal-400', icon: '👻', image: '/assets/icons/revenant-icon.webp' },
+  villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠', image: '/assets/icons/villager-icon.webp' },
 }
 
 function RoleBadgeInline({ role, bullets }: { role: string; bullets?: number }) {
   const c = roleStyles[role] || roleStyles.villager
   return (
     <div className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 ${c.bg}`}>
-      <span className="text-[10px]">{c.icon}</span>
+      {c.image ? (
+        <img src={c.image} alt={role} className="h-3 w-3 object-contain opacity-90" />
+      ) : (
+        <span className="text-[10px]">{c.icon}</span>
+      )}
       <span className={`font-display text-[10px] font-semibold capitalize ${c.text}`}>
         {role === 'kittenWolf' ? 'Kitten' : role === 'shadowWolf' ? 'Shadow' : role}
       </span>

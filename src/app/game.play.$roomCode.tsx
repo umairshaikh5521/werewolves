@@ -587,7 +587,11 @@ function GamePlayScreen() {
                   key={r.role}
                   className="flex items-center gap-2 rounded-lg border border-border bg-secondary/50 p-2"
                 >
-                  <span className="text-xl">{r.emoji}</span>
+                  {r.image ? (
+                    <img src={r.image} alt={r.role} className="h-6 w-6 object-contain opacity-90" />
+                  ) : (
+                    <span className="text-xl">{r.emoji}</span>
+                  )}
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-foreground">
                       {ROLE_META[r.role]?.label || r.role}

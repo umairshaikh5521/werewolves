@@ -6,6 +6,7 @@ interface RoleDistEntry {
     emoji: string
     count: number
     color: string
+    image?: string
 }
 
 interface CountdownOverlayProps {
@@ -25,17 +26,17 @@ export const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     12: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 4 },
 }
 
-export const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {
-    wolf: { emoji: '🐺', color: 'text-red-500', label: 'Wolf' },
-    kittenWolf: { emoji: '🐾', color: 'text-amber-500', label: 'Kitten' },
-    shadowWolf: { emoji: '👤', color: 'text-violet-500', label: 'Shadow' },
-    seer: { emoji: '🔮', color: 'text-blue-400', label: 'Seer' },
+export const ROLE_META: Record<string, { emoji: string; color: string; label: string; image?: string }> = {
+    wolf: { emoji: '🐺', color: 'text-red-500', label: 'Wolf', image: '/assets/icons/werewolf-icon.webp' },
+    kittenWolf: { emoji: '🐾', color: 'text-amber-500', label: 'Kitten', image: '/assets/icons/kitten-wolf-icon.webp' },
+    shadowWolf: { emoji: '👤', color: 'text-violet-500', label: 'Shadow', image: '/assets/icons/shadow-wolf-icon.webp' },
+    seer: { emoji: '🔮', color: 'text-blue-400', label: 'Seer', image: '/assets/icons/seer-icon.webp' },
     doctor: { emoji: '💊', color: 'text-green-400', label: 'Doctor' },
-    gunner: { emoji: '🔫', color: 'text-yellow-500', label: 'Gunner' },
-    detective: { emoji: '🕵️', color: 'text-yellow-500', label: 'Detective' },
-    hunter: { emoji: '🏹', color: 'text-orange-500', label: 'Hunter' },
-    revenant: { emoji: '👻', color: 'text-teal-400', label: 'Revenant' },
-    villager: { emoji: '🏠', color: 'text-gray-400', label: 'Villager' },
+    gunner: { emoji: '🔫', color: 'text-yellow-500', label: 'Gunner', image: '/assets/icons/gunner-icon.webp' },
+    detective: { emoji: '🕵️', color: 'text-yellow-500', label: 'Detective', image: '/assets/icons/detective-icon.webp' },
+    hunter: { emoji: '🏹', color: 'text-orange-500', label: 'Hunter', image: '/assets/icons/hunter-icon.webp' },
+    revenant: { emoji: '👻', color: 'text-teal-400', label: 'Revenant', image: '/assets/icons/revenant-icon.webp' },
+    villager: { emoji: '🏠', color: 'text-gray-400', label: 'Villager', image: '/assets/icons/villager-icon.webp' },
 }
 
 export function getRoleDistribution(playerCount: number): RoleDistEntry[] {
@@ -44,7 +45,7 @@ export function getRoleDistribution(playerCount: number): RoleDistEntry[] {
 
     return Object.entries(dist).map(([role, count]) => {
         const meta = ROLE_META[role] || { emoji: '❓', color: 'text-gray-400', label: role }
-        return { role, emoji: meta.emoji, count, color: meta.color }
+        return { role, emoji: meta.emoji, count, color: meta.color, image: meta.image }
     })
 }
 
@@ -125,7 +126,11 @@ export function CountdownOverlay({
                                     key={r.role}
                                     className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1"
                                 >
-                                    <span className="text-xs">{r.emoji}</span>
+                                    {r.image ? (
+                                        <img src={r.image} alt={r.role} className="h-4 w-4 object-contain opacity-90" />
+                                    ) : (
+                                        <span className="text-xs">{r.emoji}</span>
+                                    )}
                                     <span className="text-[11px] font-semibold text-white">
                                         {ROLE_META[r.role]?.label || r.role}
                                     </span>
