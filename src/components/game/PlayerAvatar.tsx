@@ -48,6 +48,12 @@ const roleIcons: Record<string, string> = {
   villager: '🏠',
 }
 
+const wolfIcons: Record<string, string> = {
+  wolf: '/assets/icons/werewolf-icon.webp',
+  kittenWolf: '/assets/icons/kitten-wolf-icon.webp',
+  shadowWolf: '/assets/icons/shadow-wolf-icon.webp',
+}
+
 export function PlayerAvatar({
   name,
   isAlive,
@@ -148,8 +154,20 @@ export function PlayerAvatar({
                     : 'bg-dead-gray/30 border-dead-gray/50'
             )}
           >
-            {showRole && role ? (
+            {showRole && role && wolfIcons[role] ? (
+              <img
+                src={wolfIcons[role]}
+                alt={role}
+                className={cn('object-contain opacity-90', size === 'xs' ? 'h-5 w-5' : size === 'sm' ? 'h-6 w-6' : 'h-7 w-7')}
+              />
+            ) : showRole && role ? (
               <span className={iconSizeClasses[size]}>{roleIcons[role]}</span>
+            ) : (isWolfTeammate || isSelfWolf) && isAlive && role && wolfIcons[role] ? (
+              <img
+                src={wolfIcons[role]}
+                alt={role}
+                className={cn('object-contain opacity-90', size === 'xs' ? 'h-5 w-5' : size === 'sm' ? 'h-6 w-6' : 'h-7 w-7')}
+              />
             ) : (isWolfTeammate || isSelfWolf) && isAlive ? (
               <span className={iconSizeClasses[size]}>{role === 'kittenWolf' ? '🐾' : role === 'shadowWolf' ? '👤' : '🐺'}</span>
             ) : !isAlive ? (

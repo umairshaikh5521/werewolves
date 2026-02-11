@@ -317,6 +317,12 @@ function LobbyScreen() {
             </div>
           </div>
         )}
+
+        <div className="mt-6 flex items-center justify-center">
+          <div className="rounded-full border border-teal-400/30 bg-teal-400/10 px-4 py-1.5 text-xs font-semibold text-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.2)]">
+            👻 New Role: Revenant role replaces Jester!
+          </div>
+        </div>
       </div>
     </div>
   )
