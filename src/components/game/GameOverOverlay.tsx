@@ -42,7 +42,7 @@ export function GameOverOverlay({
     : 'The wolves have overtaken the village'
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto bg-background/95 p-6 py-10 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto bg-background/95 p-6 pt-20 pb-10 backdrop-blur-sm">
       <div className="animate-bounce-in flex w-full max-w-sm flex-col items-center gap-6">
         <div
           className={cn(
