@@ -416,16 +416,16 @@ export function ActionPanel({
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto">
-              {deadPlayers.map((dp) => (
+              {deadPlayers.map((dp, index) => (
                 <button
                   key={dp._id}
                   onClick={() => onAbsorb?.(dp._id as any)}
                   className={cn(
                     'game-btn flex items-center justify-between w-full px-3 py-2 text-xs font-semibold rounded-lg',
-                    'bg-teal-500/10 border border-teal-400/30 text-teal-400 hover:bg-teal-500/20 transition-colors'
+                    'bg-teal-500/10 border border-teal-400/30 text-teal-400 hover:bg-teal-400/20 transition-colors'
                   )}
                 >
-                  <span>👻 {dp.name}</span>
+                  <span>👻 Body #{index + 1}</span>
                   <span className="text-[10px] text-teal-400/60 capitalize">
                     {dp.role === 'kittenWolf' ? 'Kitten Wolf' : dp.role === 'shadowWolf' ? 'Shadow Wolf' : dp.role}
                   </span>
@@ -503,6 +503,15 @@ export function ActionPanel({
   if (role === 'gunner' && (bullets ?? 0) > 0) {
     return (
       <div className="flex flex-col gap-2 px-4 py-3">
+        {isMuted && (
+          <div className="mb-1 flex items-center gap-2 rounded-lg bg-violet-500/10 px-3 py-2 border border-violet-500/20">
+            <span className="text-base">🔇</span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-violet-400">Silenced</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">You cannot chat during the day</p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <GunIcon className="h-4 w-4 text-foreground" />
           <span className="font-display text-xs font-semibold text-foreground">Armed & Dangerous</span>

@@ -770,6 +770,16 @@ async function processRevenantAbsorption(
 
   await ctx.db.patch(revenant._id, patch)
 
+  // Notify public chat
+  await ctx.db.insert('chat', {
+    gameId,
+    senderId: revenant._id,
+    senderName: 'System',
+    content: '👻 The Revenant has used its ability.',
+    channel: 'global',
+    timestamp: Date.now(),
+  })
+
   // If the Revenant absorbed a wolf role, notify wolf chat
   if (newTeam === 'bad') {
     await ctx.db.insert('chat', {

@@ -14,7 +14,6 @@ import type * as gameChat from "../gameChat.js";
 import type * as gameEngine from "../gameEngine.js";
 import type * as games from "../games.js";
 import type * as http from "../http.js";
-import type * as migrations from "../migrations.js";
 import type * as userRoles from "../userRoles.js";
 
 import type {
@@ -30,7 +29,6 @@ declare const fullApi: ApiFromModules<{
   gameEngine: typeof gameEngine;
   games: typeof games;
   http: typeof http;
-  migrations: typeof migrations;
   userRoles: typeof userRoles;
 }>;
 
