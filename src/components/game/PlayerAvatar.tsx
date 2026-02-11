@@ -31,7 +31,7 @@ const roleColors: Record<string, string> = {
   gunner: 'bg-moon-gold/20 border-moon-gold',
   detective: 'bg-moon-gold/20 border-moon-gold',
   hunter: 'bg-orange-500/20 border-orange-500',
-  jester: 'bg-fuchsia-500/20 border-fuchsia-500',
+  revenant: 'bg-teal-400/20 border-teal-400',
   villager: 'bg-secondary border-border',
 }
 
@@ -44,7 +44,7 @@ const roleIcons: Record<string, string> = {
   gunner: '🔫',
   detective: '🕵️',
   hunter: '🏹',
-  jester: '🃏',
+  revenant: '👻',
   villager: '🏠',
 }
 

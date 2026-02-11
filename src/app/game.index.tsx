@@ -113,9 +113,9 @@ function GameHome() {
           <Link
             to="/game/guide"
             hash="roles"
-            className="mt-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3 py-1 text-[11px] font-semibold text-fuchsia-400 hover:bg-fuchsia-500/20 transition-colors"
+            className="mt-2 rounded-full border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[11px] font-semibold text-teal-400 hover:bg-teal-400/20 transition-colors"
           >
-            🆕 New roles: Jester, Hunter & Shadow Wolf
+            👻 New: Revenant role replaces Jester!
           </Link>
         </div>
 

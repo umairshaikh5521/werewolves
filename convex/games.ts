@@ -222,6 +222,7 @@ export const resetToLobby = mutation({
         isMuted: undefined,
         wasConverted: undefined,
         convertedAtTurn: undefined,
+        revenantAbsorbedRole: undefined,
       })
     }
 
@@ -250,7 +251,6 @@ export const resetToLobby = mutation({
       endReason: undefined,
       hunterRevengePlayerId: undefined,
       previousPhase: undefined,
-      jesterWinnerId: undefined,
     })
   },
 })

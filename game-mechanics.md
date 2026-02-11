@@ -29,7 +29,6 @@
 ### Core Objective
 - **Village Team:** Eliminate all werewolves
 - **Werewolf Team:** Equal or outnumber the villagers
-- **Neutral (Jester):** Get voted out by the village
 
 ### Game Limits
 - **Player Range:** 5-12 players
@@ -66,25 +65,12 @@ Equal or outnumber non-werewolf players
 
 **Important Notes:**
 - Converted players (bitten by Kitten Wolf) count as werewolves
-- The Jester (neutral) counts as a non-werewolf for win condition purposes
+- The Jester (neutral) has been removed in favor of the Revenant
+- The Revenant counts as a non-werewolf for win condition purposes (until they absorb a wolf role)
 
 ---
 
-### 🃏 Neutral Team
-**Roles:** Jester
 
-**Win Condition:**  
-Get voted out by the village during the voting phase
-
-**Victory Triggers:**
-- Jester receives majority votes during voting phase
-- Game immediately ends when Jester wins
-
-**Loss Conditions:**
-- Killed by werewolves at night
-- Shot by the Gunner during the day
-- Killed by Hunter's revenge
-- Game ends with Village or Werewolf victory
 
 ---
 
@@ -157,7 +143,6 @@ Get voted out by the village during the voting phase
 - If no majority: No one is eliminated
 
 **Special Cases:**
-- If Jester is voted out → Jester wins, game ends
 - If Hunter is voted out → Hunter Revenge phase
 - If last werewolf is voted out → Village wins
 
@@ -192,22 +177,22 @@ Game checks for victory after Hunter's revenge shot resolves
 
 Roles are automatically assigned based on the number of players in the lobby.
 
-| Players | Wolf | Kitten | Shadow | Seer | Doctor | Gunner | Detective | Hunter | Jester | Villager |
-|---------|------|--------|--------|------|--------|--------|-----------|--------|--------|----------|
-| **5**   | 1    | 0      | 0      | 1    | 1      | 0      | 0         | 0      | 0      | 2        |
-| **6**   | 1    | 0      | 0      | 1    | 1      | 1      | 0         | 0      | 0      | 2        |
-| **7**   | 2    | 0      | 0      | 1    | 1      | 1      | 0         | 1      | 0      | 1        |
-| **8**   | 1    | 0      | 1      | 1    | 1      | 1      | 1         | 1      | 0      | 1        |
-| **9**   | 1    | 1      | 0      | 1    | 1      | 1      | 0         | 1      | 1      | 2        |
-| **10**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 2        |
-| **11**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 3        |
-| **12**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1      | 4        |
+| Players | Wolf | Kitten | Shadow | Seer | Doctor | Gunner | Detective | Hunter | Revenant | Villager |
+|---------|------|--------|--------|------|--------|--------|-----------|--------|----------|----------|
+| **5**   | 1    | 0      | 0      | 1    | 1      | 0      | 0         | 0      | 0        | 2        |
+| **6**   | 1    | 0      | 0      | 1    | 1      | 1      | 0         | 0      | 0        | 2        |
+| **7**   | 2    | 0      | 0      | 1    | 1      | 1      | 0         | 1      | 0        | 1        |
+| **8**   | 1    | 0      | 1      | 1    | 1      | 1      | 1         | 1      | 1        | 0        |
+| **9**   | 1    | 1      | 0      | 1    | 1      | 1      | 0         | 1      | 1        | 2        |
+| **10**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1        | 2        |
+| **11**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1        | 3        |
+| **12**  | 0    | 1      | 1      | 1    | 1      | 1      | 1         | 1      | 1        | 4        |
 
 ### Distribution Notes:
 - **5-6 players:** Basic setup (Wolf, Seer, Doctor, Villagers)
 - **7 players:** Introduces multiple wolves and Hunter
-- **8 players:** Adds Shadow Wolf and Detective
-- **9+ players:** Full role set including Kitten Wolf and Jester
+- **8 players:** Adds Shadow Wolf, Detective, and Revenant
+- **9+ players:** Full role set including Kitten Wolf and Revenant
 - **Scaling:** More wolves added at 7 and 12 players for balance
 
 ---
@@ -304,7 +289,7 @@ Roles are automatically assigned based on the number of players in the lobby.
 **Scan Results:**
 - Werewolf, Kitten Wolf, Shadow Wolf → Shows as "Werewolf"
 - Seer, Doctor, Gunner, Detective, Hunter, Villager → Shows as "Villager"
-- **Jester** → Shows as "Villager" (neutral appears good)
+- **Revenant** → Shows as "Villager" (until absorbed a wolf role)
 - Converted players → Show as "Werewolf" after conversion
 
 **Result Delivery:**
@@ -316,7 +301,7 @@ Roles are automatically assigned based on the number of players in the lobby.
 - Most powerful village role
 - High-priority target for werewolves
 - Must share information carefully to avoid being killed
-- Jester appears innocent to Seer
+- Revenant appears innocent initially
 
 ---
 
@@ -387,19 +372,19 @@ Roles are automatically assigned based on the number of players in the lobby.
 **Comparison Results:**
 - Two werewolves → Same Team
 - Two villagers → Same Team
-- Villager + Jester → Same Team (both non-bad)
+- Villager + Revenant → Same Team (Revenant starts as Village)
 - Werewolf + Villager → Different Teams
-- Werewolf + Jester → Different Teams
+- Werewolf + Revenant → Different Teams (unless Revenant absorbed a wolf)
 
 **Team Groupings:**
-- **Bad Team:** Werewolf, Kitten Wolf, Shadow Wolf, Converted Players
-- **Non-Bad Team:** Seer, Doctor, Gunner, Detective, Hunter, Jester, Villager
+- **Bad Team:** Werewolf, Kitten Wolf, Shadow Wolf, Converted Players, Revenant (if wolf absorbed)
+- **Good Team:** Seer, Doctor, Gunner, Detective, Hunter, Villager, Revenant (initially)
 
 **Strategic Notes:**
 - Powerful deduction tool
 - Can confirm or eliminate suspects
 - Works well with Seer information
-- Jester appears as "same team" with villagers
+- Revenant appears as "same team" with villagers initially
 
 ---
 
@@ -435,39 +420,34 @@ Roles are automatically assigned based on the number of players in the lobby.
 
 ---
 
-### 🃏 Jester (Neutral Team)
-**Team:** Neutral  
-**Count:** 0-1 (appears at 9+ players)
+### 👻 Revenant (Village Team - Initially)
+**Team:** Good (starts)  
+**Count:** 0-1 (appears at 8+ players)
 
 **Win Condition:**
-- Get voted out during voting phase (majority vote required)
+- Starts as Village team: Eliminate all werewolves
+- **If absorbs a wolf role:** Joins Werewolf team (win with wolves)
 
-**Loss Conditions:**
-- Killed by werewolves at night
-- Shot by Gunner during day
-- Killed by Hunter's revenge
-- Game ends with Village or Werewolf victory
+**Ability (Night 2+):**
+- Can choose a **DEAD** player from the graveyard
+- **Absorbs their role** and becomes that role
+- Cannot be used on Night 1 (must wait for a death)
+- One-time use
 
-**Abilities:**
-- No night action
-- No special powers
-- Only has chat and voting
-
-**Detection:**
-- Appears as "Villager" to Seer
-- Appears as "Same Team" with villagers to Detective
-- Counts as non-werewolf for win conditions
-
-**Victory Behavior:**
-- If voted out with majority → Game ends immediately
-- Jester wins, all other players lose
-- Message: "🃏 JESTER WINS! [Name] was the Jester and fooled the entire village!"
+**Absorption Mechanics:**
+- Select a dead player via the Action Panel
+- Instantly transform into their role
+- Gain all abilities of the new role (fresh use)
+- **Team Alignment:** Changes to match the absorbed role
+- **Wolf Chat:** Gains access if a wolf role is absorbed
+- **Notification:** Wolves are notified if a new wolf joins via absorption
 
 **Strategic Notes:**
-- Must act suspicious enough to get voted
-- Cannot be too obvious or players will avoid voting
-- Must survive night and avoid Gunner
-- Unique solo victory condition
+- Flexible "wildcard" role
+- Can restore a lost power role (Seer, Doctor)
+- Can defect to wolves if the village is losing
+- Starts as a simple villager until they act
+- Detective sees them as "Same Team" as Villagers initially
 
 ---
 
@@ -552,9 +532,9 @@ VOTING → HUNTER_REVENGE → NIGHT (next turn)
 DAY → HUNTER_REVENGE → VOTING
 ```
 
-**Jester Voted Out:**
+**Revenant Absorption:**
 ```
-VOTING → GAME_ENDED (Jester wins)
+NIGHT (Turn 2+) → ACTION (Absorb) → ROLE_CHANGE
 ```
 
 ---
@@ -625,7 +605,6 @@ VOTING → GAME_ENDED (Jester wins)
    - If no majority → No elimination
 
 3. **Special Role Check**
-   - If Jester eliminated → Jester wins, game ends
    - If Hunter eliminated → Hunter Revenge phase
    - Otherwise → Check win condition
 
@@ -663,7 +642,7 @@ VOTING → GAME_ENDED (Jester wins)
 6. Kitten Wolf's `hasBitten` flag set to `true` (cannot bite again)
 
 **Conversion Rules:**
-- Cannot convert werewolves or Jester
+- Cannot convert werewolves
 - Conversion does NOT trigger Hunter revenge
 - Converted player knows they were converted
 - Seer will see converted player as werewolf
@@ -825,7 +804,7 @@ function checkWinCondition(players) {
 ```
 
 **Special Cases:**
-- Jester voted out → Immediate neutral win (bypasses normal check)
+
 - Round 10 reached → Force winner determination
 - Converted players count as werewolves
 
@@ -888,8 +867,7 @@ function checkWinCondition(players) {
 **Gunner Shot:**
 - "BANG! [Gunner] shot [Target]!"
 
-**Jester Win:**
-- "🃏 JESTER WINS! [Name] was the Jester and fooled the entire village!"
+
 
 **Wolf Chat:**
 - "[Name] has joined the wolf pack." (conversion)
@@ -915,7 +893,7 @@ function checkWinCondition(players) {
   startCountdownAt?: number,     // Countdown start timestamp
   hunterRevengePlayerId?: Id,    // Hunter taking revenge
   previousPhase?: string,        // Phase before hunter_revenge
-  jesterWinnerId?: Id            // Jester who won
+  hunterRevengePlayerId?: Id,    // Player taking revenge shot
 }
 ```
 
@@ -1065,7 +1043,6 @@ const MAX_ROUNDS = 10
 
 **Low Power:**
 - Werewolf (basic kill)
-- Jester (unique win)
 - Villager (voting only)
 
 ### Balance Considerations
@@ -1082,7 +1059,7 @@ const MAX_ROUNDS = 10
 
 **9-12 Players:**
 - Full role diversity
-- Jester adds chaos
+- Shadow Wolf mutes discussion
 - Multiple wolves for balance
 - Conversion adds swing potential
 
@@ -1100,7 +1077,7 @@ const MAX_ROUNDS = 10
 
 **Deception Roles:**
 - Werewolves: Blend and mislead
-- Jester: Act suspicious
+- Revenant: Choose target wisely
 - Shadow Wolf: Silence key players
 
 ---

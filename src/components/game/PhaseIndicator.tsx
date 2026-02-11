@@ -94,7 +94,7 @@ const roleStyles: Record<string, { bg: string; text: string; icon: string }> = {
   gunner: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🔫' },
   detective: { bg: 'bg-moon-gold/20 border-moon-gold/40', text: 'text-moon-gold', icon: '🕵️' },
   hunter: { bg: 'bg-orange-500/20 border-orange-500/40', text: 'text-orange-500', icon: '🏹' },
-  jester: { bg: 'bg-fuchsia-500/20 border-fuchsia-500/40', text: 'text-fuchsia-500', icon: '🃏' },
+  revenant: { bg: 'bg-teal-400/20 border-teal-400/40', text: 'text-teal-400', icon: '👻' },
   villager: { bg: 'bg-secondary border-border', text: 'text-secondary-foreground', icon: '🏠' },
 }
 

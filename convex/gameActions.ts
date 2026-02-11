@@ -129,12 +129,15 @@ async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, ac
   // Determine which players need to act at night
   const nightActors = alivePlayers.filter((p: any) => {
     const role = p.role
-    return role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf' || role === 'seer' || role === 'doctor' || role === 'detective'
+    if (role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf' || role === 'seer' || role === 'doctor' || role === 'detective') return true
+    // Revenant is a night actor from turn 2 onward (turn 1 is Night 2)
+    if (role === 'revenant' && game.turnNumber >= 1) return true
+    return false
   })
 
   // Check if each night actor has submitted an action
   // Shadow Wolf needs BOTH a kill vote AND a mute (or skipMute) action
-  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert', 'mute', 'skipMute']
+  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert', 'mute', 'skipMute', 'absorb']
   const nightActions = actions.filter((a: any) => nightActionTypes.includes(a.type) && a.phase === 'night')
 
   const allActed = nightActors.every((p: any) => {
@@ -331,8 +334,7 @@ export const investigatePlayers = mutation({
       .collect()
     await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
 
-    // For detective comparison: Jester (neutral) and village are both "not bad"
-    // So Jester vs Villager = same team, Jester vs Wolf = different teams
+    // For detective comparison: Revenant (village team pre-absorb) compares same as villager
     const sameTeam = p1.team === p2.team
     return { sameTeam, target1Name: p1.name, target2Name: p2.name }
   },
@@ -550,7 +552,7 @@ export const getSeerResult = query({
     const target = await ctx.db.get(scanAction.targetId)
     if (!target) return null
 
-    // Jester (neutral) shows as "good" to the Seer — they're not a wolf
+    // Neutral/Revenant shows as "good" to the Seer — they're not a wolf
     const displayTeam = target.team === 'bad' ? 'bad' : 'good'
 
     return {
@@ -761,3 +763,105 @@ export const getHunterRevengeState = query({
 })
 
 // end of file
+
+// Revenant absorb role action
+export const absorbRole = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only absorb at night')
+    if (game.turnNumber < 1) throw new Error('Revenant ability activates from Night 2')
+
+    const actor = await ctx.db.get(args.playerId)
+    if (!actor || !actor.isAlive) throw new Error('Player is not alive')
+    if (actor.role !== 'revenant') throw new Error('Only Revenant can absorb roles')
+    if (actor.revenantAbsorbedRole) throw new Error('Already absorbed a role')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target) throw new Error('Target not found')
+    if (target.isAlive) throw new Error('Can only absorb dead players\' roles')
+    if (target.role === 'revenant') throw new Error('Cannot absorb Revenant role')
+
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const existing = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'absorb'
+    )
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { targetId: args.targetId })
+
+      const updatedActions = await ctx.db
+        .query('actions')
+        .withIndex('by_game_turn', (q) =>
+          q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+        )
+        .collect()
+      await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+      return existing._id
+    }
+
+    const actionId = await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'absorb',
+      actorId: args.playerId,
+      targetId: args.targetId,
+    })
+
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return actionId
+  },
+})
+
+// Query Revenant status (has absorbed, what role)
+export const getRevenantStatus = query({
+  args: { gameId: v.id('games'), playerId: v.id('players') },
+  handler: async (ctx, args) => {
+    const player = await ctx.db.get(args.playerId)
+    if (!player) return null
+    return {
+      isRevenant: player.role === 'revenant',
+      hasAbsorbed: !!player.revenantAbsorbedRole,
+      absorbedRole: player.revenantAbsorbedRole || null,
+    }
+  },
+})
+
+// Query dead players for Revenant's graveyard selection
+export const getDeadPlayers = query({
+  args: { gameId: v.id('games') },
+  handler: async (ctx, args) => {
+    const players = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    return players
+      .filter((p) => !p.isAlive && p.role !== 'revenant')
+      .map((p) => ({
+        _id: p._id,
+        name: p.name,
+        role: p.role,
+      }))
+  },
+})

@@ -18,11 +18,11 @@ const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     5: { wolf: 1, seer: 1, doctor: 1, villager: 2 },
     6: { wolf: 1, seer: 1, doctor: 1, gunner: 1, villager: 2 },
     7: { wolf: 2, seer: 1, doctor: 1, gunner: 1, hunter: 1, villager: 1 },
-    8: { wolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, villager: 1 },
-    9: { wolf: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, hunter: 1, jester: 1, villager: 2 },
-    10: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 2 },
-    11: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 3 },
-    12: { wolf: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villager: 4 },
+    8: { wolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1 },
+    9: { wolf: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, hunter: 1, revenant: 1, villager: 2 },
+    10: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 2 },
+    11: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 3 },
+    12: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 4 },
 }
 
 const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {
@@ -34,7 +34,7 @@ const ROLE_META: Record<string, { emoji: string; color: string; label: string }>
     gunner: { emoji: '🔫', color: 'text-yellow-500', label: 'Gunner' },
     detective: { emoji: '🕵️', color: 'text-yellow-500', label: 'Detective' },
     hunter: { emoji: '🏹', color: 'text-orange-500', label: 'Hunter' },
-    jester: { emoji: '🃏', color: 'text-fuchsia-500', label: 'Jester' },
+    revenant: { emoji: '👻', color: 'text-teal-400', label: 'Revenant' },
     villager: { emoji: '🏠', color: 'text-gray-400', label: 'Villager' },
 }
 

@@ -55,6 +55,7 @@ function GamePlayScreen() {
   const submitMuteFn = useMutation(api.gameActions.submitMute)
   const skipMuteFn = useMutation(api.gameActions.skipMute)
   const hunterRevengeFn = useMutation(api.gameActions.hunterRevenge)
+  const absorbRoleFn = useMutation(api.gameActions.absorbRole)
   const sendMessage = useMutation(api.gameChat.sendMessage)
   const resetToLobby = useMutation(api.games.resetToLobby)
 
@@ -70,6 +71,12 @@ function GamePlayScreen() {
   const conversionStatus = useQuery(
     api.gameActions.getConversionStatus,
     game && myPlayer ? { gameId: game._id, playerId: myPlayer._id } : 'skip'
+  )
+  const deadPlayers = useQuery(
+    api.gameActions.getDeadPlayers,
+    game && myPlayer && myPlayer.role === 'revenant' && game.phase === 'night' && game.turnNumber >= 1
+      ? { gameId: game._id }
+      : 'skip'
   )
   const voters = useQuery(
     api.gameActions.getVotersThisTurn,
@@ -387,6 +394,22 @@ function GamePlayScreen() {
     }
   }, [game, myPlayer, selectedPlayerId, hunterRevengeFn])
 
+  // Revenant absorb handler
+  const handleAbsorb = useCallback(async (targetId: Id<'players'>) => {
+    if (!game || !myPlayer) return
+    if (myPlayer.role !== 'revenant') return
+    try {
+      await absorbRoleFn({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId,
+      })
+      setHasActed(true)
+    } catch {
+      // absorb failed
+    }
+  }, [game, myPlayer, absorbRoleFn])
+
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!game || !myPlayer) return
@@ -623,6 +646,9 @@ function GamePlayScreen() {
             isHunterRevenge={game.phase === 'hunter_revenge'}
             isHunterRevengePlayer={game.phase === 'hunter_revenge' && hunterRevengeState?.hunterPlayerId === myPlayer._id}
             onHunterRevenge={handleHunterRevenge}
+            deadPlayers={deadPlayers || undefined}
+            onAbsorb={handleAbsorb}
+            turnNumber={game.turnNumber}
           />
         </div>
 

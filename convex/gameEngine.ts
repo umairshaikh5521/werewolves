@@ -3,7 +3,7 @@ import { mutation, internalMutation } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 
-type GameRole = 'wolf' | 'kittenWolf' | 'shadowWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'hunter' | 'jester' | 'villager'
+type GameRole = 'wolf' | 'kittenWolf' | 'shadowWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'hunter' | 'revenant' | 'villager'
 type Team = 'good' | 'bad' | 'neutral'
 
 interface RoleDist {
@@ -15,19 +15,19 @@ interface RoleDist {
   gunner: number
   detective: number
   hunter: number
-  jester: number
+  revenant: number
   villagers: number
 }
 
 const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
-  5: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, hunter: 0, jester: 0, villagers: 2 },
-  6: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 0, jester: 0, villagers: 2 },
-  7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 0, villagers: 1 },
-  8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 0, villagers: 1 },
-  9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, jester: 1, villagers: 2 },
-  10: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 2 },
-  11: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 3 },
-  12: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, jester: 1, villagers: 4 },
+  5: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  6: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 0, villagers: 1 },
+  8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 0 },
+  9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 1, villagers: 2 },
+  10: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 2 },
+  11: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 3 },
+  12: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 4 },
 }
 
 // Dynamic durations based on player count
@@ -79,8 +79,8 @@ function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: Gam
   for (let i = 0; i < dist.hunter; i++) {
     roles.push({ role: 'hunter', team: 'good' })
   }
-  for (let i = 0; i < dist.jester; i++) {
-    roles.push({ role: 'jester', team: 'neutral' })
+  for (let i = 0; i < dist.revenant; i++) {
+    roles.push({ role: 'revenant', team: 'good' })
   }
   for (let i = 0; i < dist.villagers; i++) {
     roles.push({ role: 'villager', team: 'good' })
@@ -104,6 +104,12 @@ function buildRoleData(role: GameRole) {
     return { hasBitten: false }
   }
   return undefined
+}
+
+// Helper to determine team for a given role
+function getTeamForRole(role: GameRole): Team {
+  if (role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf') return 'bad'
+  return 'good'
 }
 
 const COUNTDOWN_DURATION = 6_000
@@ -380,25 +386,6 @@ export const transitionPhase = internalMutation({
     } else if (game.phase === 'voting') {
       const voteResult = await resolveVoting(ctx, args.gameId, players, actions)
 
-      // Jester voted out = Jester wins, game ends
-      if (voteResult.isJester && voteResult.eliminatedPlayer) {
-        await ctx.db.insert('chat', {
-          gameId: args.gameId,
-          senderId: voteResult.eliminatedPlayer._id,
-          senderName: 'System',
-          content: `🃏 JESTER WINS! ${voteResult.eliminatedPlayer.name} was the Jester and fooled the entire village!`,
-          channel: 'global',
-          timestamp: Date.now(),
-        })
-        await ctx.db.patch(args.gameId, {
-          status: 'ended',
-          winningTeam: 'neutral',
-          jesterWinnerId: voteResult.eliminatedPlayer._id,
-          endReason: `${voteResult.eliminatedPlayer.name} was the Jester! The fool wins!`,
-        })
-        return
-      }
-
       const updatedPlayers = await ctx.db
         .query('players')
         .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
@@ -591,6 +578,7 @@ export const transitionPhase = internalMutation({
 interface NightResult {
   hunterDied: boolean
   hunterPlayerId?: Id<'players'>
+  revenantAbsorbed?: boolean
 }
 
 async function resolveNight(
@@ -662,6 +650,8 @@ async function resolveNight(
         channel: 'wolves',
         timestamp: Date.now(),
       })
+      // Process Revenant absorption even on conversion nights
+      await processRevenantAbsorption(ctx, gameId, players, actions, game)
       return result
     }
   }
@@ -704,6 +694,8 @@ async function resolveNight(
           channel: 'global',
           timestamp: Date.now(),
         })
+        // Process Revenant absorption after kill
+        await processRevenantAbsorption(ctx, gameId, players, actions, game)
         return result
       }
 
@@ -715,6 +707,8 @@ async function resolveNight(
         channel: 'global',
         timestamp: Date.now(),
       })
+      // Process Revenant absorption even when target was saved
+      await processRevenantAbsorption(ctx, gameId, players, actions, game)
       return result
     }
   }
@@ -727,12 +721,70 @@ async function resolveNight(
     channel: 'global',
     timestamp: Date.now(),
   })
+
+  // 5. Process Revenant absorption (runs regardless of kill outcome, after everything else)
+  await processRevenantAbsorption(ctx, gameId, players, actions, game)
+
   return result
+}
+
+// Process Revenant's graveyard absorption ability
+async function processRevenantAbsorption(
+  ctx: { db: any; scheduler: any },
+  gameId: Id<'games'>,
+  players: any[],
+  actions: any[],
+  game: any
+) {
+  // Revenant can only absorb starting from turn 1 (Night 2)
+  if (game.turnNumber < 1) return
+
+  const absorbAction = actions.find((a: any) => a.type === 'absorb')
+  if (!absorbAction) return
+
+  const revenant = players.find((p: any) => p._id === absorbAction.actorId)
+  if (!revenant || !revenant.isAlive || revenant.role !== 'revenant') return
+
+  // Get the target (dead player whose role to absorb)
+  // We need to re-fetch because the player might have just died this night
+  const targetPlayer = await ctx.db.get(absorbAction.targetId)
+  if (!targetPlayer || targetPlayer.isAlive) return // Target must be dead
+
+  const absorbedRole = targetPlayer.role as GameRole
+  if (!absorbedRole || absorbedRole === 'revenant') return // Can't absorb revenant role
+
+  const newTeam = getTeamForRole(absorbedRole)
+  const newRoleData = buildRoleData(absorbedRole)
+
+  // Update the Revenant's role, team, and roleData
+  const patch: Record<string, unknown> = {
+    role: absorbedRole,
+    team: newTeam,
+    revenantAbsorbedRole: absorbedRole,
+  }
+  if (newRoleData !== undefined) {
+    patch.roleData = newRoleData
+  } else {
+    patch.roleData = undefined
+  }
+
+  await ctx.db.patch(revenant._id, patch)
+
+  // If the Revenant absorbed a wolf role, notify wolf chat
+  if (newTeam === 'bad') {
+    await ctx.db.insert('chat', {
+      gameId,
+      senderId: revenant._id,
+      senderName: 'System',
+      content: `👻 ${revenant.name} has risen from the shadows and joined the wolf pack as a ${absorbedRole === 'kittenWolf' ? 'Kitten Wolf' : absorbedRole === 'shadowWolf' ? 'Shadow Wolf' : 'Werewolf'}.`,
+      channel: 'wolves',
+      timestamp: Date.now(),
+    })
+  }
 }
 
 interface VoteResult {
   eliminatedPlayer: any | null
-  isJester: boolean
   isHunter: boolean
 }
 
@@ -742,7 +794,7 @@ async function resolveVoting(
   players: any[],
   actions: any[]
 ): Promise<VoteResult> {
-  const result: VoteResult = { eliminatedPlayer: null, isJester: false, isHunter: false }
+  const result: VoteResult = { eliminatedPlayer: null, isHunter: false }
   const votes = actions.filter((a: any) => a.type === 'vote' && a.phase === 'voting')
 
   if (votes.length === 0) {
@@ -780,11 +832,6 @@ async function resolveVoting(
     const eliminated = players.find((p: any) => p._id === targetId)
     result.eliminatedPlayer = eliminated || null
 
-    // Check if eliminated player is the Jester
-    if (eliminated && eliminated.role === 'jester') {
-      result.isJester = true
-    }
-
     // Check if eliminated player is the Hunter
     if (eliminated && eliminated.role === 'hunter') {
       result.isHunter = true
@@ -815,7 +862,7 @@ async function resolveVoting(
 export function checkWinCondition(players: any[]): string | null {
   const alive = players.filter((p: any) => p.isAlive)
   const wolves = alive.filter((p: any) => p.team === 'bad')
-  const nonWolves = alive.filter((p: any) => p.team !== 'bad') // includes neutrals (Jester)
+  const nonWolves = alive.filter((p: any) => p.team !== 'bad')
 
   if (wolves.length === 0) return 'good'
   if (wolves.length >= nonWolves.length) return 'bad'

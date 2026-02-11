@@ -31,7 +31,7 @@ export const gameRoleValidator = v.union(
   v.literal('gunner'),
   v.literal('detective'),
   v.literal('hunter'),
-  v.literal('jester'),
+  v.literal('revenant'),
   v.literal('villager')
 )
 
@@ -51,7 +51,8 @@ export const actionTypeValidator = v.union(
   v.literal('convert'),
   v.literal('mute'),
   v.literal('revenge'),
-  v.literal('skipMute')
+  v.literal('skipMute'),
+  v.literal('absorb')
 )
 
 export const chatChannelValidator = v.union(
@@ -80,7 +81,6 @@ export default defineSchema({
     startCountdownAt: v.optional(v.number()),
     hunterRevengePlayerId: v.optional(v.id('players')),
     previousPhase: v.optional(v.string()),
-    jesterWinnerId: v.optional(v.id('players')),
   }).index('by_code', ['roomCode']),
 
   players: defineTable({
@@ -101,6 +101,7 @@ export default defineSchema({
     convertedAtTurn: v.optional(v.number()),
     isReady: v.optional(v.boolean()),
     isMuted: v.optional(v.boolean()),
+    revenantAbsorbedRole: v.optional(v.string()),
   })
     .index('by_game', ['gameId'])
     .index('by_game_user', ['gameId', 'userId']),

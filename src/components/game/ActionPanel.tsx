@@ -38,6 +38,9 @@ interface ActionPanelProps {
   isHunterRevenge?: boolean
   isHunterRevengePlayer?: boolean
   onHunterRevenge?: () => void
+  deadPlayers?: Array<{ _id: string; name: string; role?: string }>
+  onAbsorb?: (targetId: any) => void
+  turnNumber?: number
 }
 
 export function ActionPanel({
@@ -62,6 +65,9 @@ export function ActionPanel({
   onSkipMute,
   isHunterRevengePlayer,
   onHunterRevenge,
+  deadPlayers,
+  onAbsorb,
+  turnNumber,
 }: ActionPanelProps) {
   const [showBiteConfirm, setShowBiteConfirm] = useState(false)
   const [hasMuted, setHasMuted] = useState(false)
@@ -393,7 +399,46 @@ export function ActionPanel({
       )
     }
 
-    // Jester, Hunter, Villager, Gunner — all sleep at night
+    // Revenant graveyard absorption — Night 2+ only
+    if (role === 'revenant' && (turnNumber ?? 0) >= 1 && deadPlayers && deadPlayers.length > 0) {
+      return (
+        <div className="flex flex-col gap-2 px-4 py-3">
+          <div className="flex items-center gap-2 text-teal-400">
+            <span className="text-base">👻</span>
+            <span className="font-display text-xs font-semibold">Revenant — Absorb a Role</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Choose a dead player's role to become. This is permanent.
+          </p>
+          {hasActed ? (
+            <div className="animate-bounce-in rounded-lg bg-teal-400/20 px-3 py-1.5 text-xs font-semibold text-teal-400">
+              Absorption target selected — awaiting dawn
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto">
+              {deadPlayers.map((dp) => (
+                <button
+                  key={dp._id}
+                  onClick={() => onAbsorb?.(dp._id as any)}
+                  className={cn(
+                    'game-btn flex items-center justify-between w-full px-3 py-2 text-xs font-semibold rounded-lg',
+                    'bg-teal-500/10 border border-teal-400/30 text-teal-400 hover:bg-teal-500/20 transition-colors'
+                  )}
+                >
+                  <span>👻 {dp.name}</span>
+                  <span className="text-[10px] text-teal-400/60 capitalize">
+                    {dp.role === 'kittenWolf' ? 'Kitten Wolf' : dp.role === 'shadowWolf' ? 'Shadow Wolf' : dp.role}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // Revenant on Night 1 or with no dead players (or after absorption) — sleeps
+    // Also: Hunter, Villager, Gunner — all sleep at night
     return (
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="animate-float flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-seer-blue/10">
