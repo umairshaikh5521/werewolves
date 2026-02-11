@@ -14,7 +14,7 @@ interface CountdownOverlayProps {
     playerCount?: number
 }
 
-const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
+export const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     5: { wolf: 1, seer: 1, doctor: 1, villager: 2 },
     6: { wolf: 1, seer: 1, doctor: 1, gunner: 1, villager: 2 },
     7: { wolf: 2, seer: 1, doctor: 1, gunner: 1, hunter: 1, villager: 1 },
@@ -25,7 +25,7 @@ const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     12: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 4 },
 }
 
-const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {
+export const ROLE_META: Record<string, { emoji: string; color: string; label: string }> = {
     wolf: { emoji: '🐺', color: 'text-red-500', label: 'Wolf' },
     kittenWolf: { emoji: '🐾', color: 'text-amber-500', label: 'Kitten' },
     shadowWolf: { emoji: '👤', color: 'text-violet-500', label: 'Shadow' },
@@ -38,7 +38,7 @@ const ROLE_META: Record<string, { emoji: string; color: string; label: string }>
     villager: { emoji: '🏠', color: 'text-gray-400', label: 'Villager' },
 }
 
-function getRoleDistribution(playerCount: number): RoleDistEntry[] {
+export function getRoleDistribution(playerCount: number): RoleDistEntry[] {
     const dist = ROLE_DISTRIBUTION[playerCount]
     if (!dist) return []
 

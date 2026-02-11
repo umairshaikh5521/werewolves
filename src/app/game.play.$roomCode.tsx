@@ -13,7 +13,9 @@ import { GameOverOverlay } from '@/components/game/GameOverOverlay'
 import { RoleReveal } from '@/components/game/RoleReveal'
 import { ConversionOverlay } from '@/components/game/ConversionOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { MessageCircle, ChevronUp } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { getRoleDistribution, ROLE_META } from '@/components/game/CountdownOverlay'
+import { MessageCircle, ChevronUp, Info } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/play/$roomCode')({
@@ -568,15 +570,47 @@ function GamePlayScreen() {
 
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
-      <div className="shrink-0 px-4 pt-3 pb-1">
-        <PhaseIndicator
-          phase={game.phase}
-          phaseEndTime={game.phaseEndTime}
-          turnNumber={game.turnNumber}
-          role={myPlayer.role || undefined}
-          bullets={myPlayer.roleData?.bullets}
-          onRoleClick={() => setShowRoleReveal(true)}
-        />
+      <div className="shrink-0 px-4 pt-3 pb-1 flex items-center gap-3">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-border bg-card text-muted-foreground transition-all hover:border-primary/50 hover:bg-secondary hover:text-foreground active:scale-95">
+              <Info className="h-5 w-5" />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-xs border-2 border-border bg-card">
+            <DialogHeader>
+              <DialogTitle className="text-center font-display text-xl text-primary">Role Distribution</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              {getRoleDistribution(players.length).map((r) => (
+                <div
+                  key={r.role}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-secondary/50 p-2"
+                >
+                  <span className="text-xl">{r.emoji}</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground">
+                      {ROLE_META[r.role]?.label || r.role}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Count: {r.count}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+        <div className="flex-1 min-w-0">
+          <PhaseIndicator
+            phase={game.phase}
+            phaseEndTime={game.phaseEndTime}
+            turnNumber={game.turnNumber}
+            role={myPlayer.role || undefined}
+            bullets={myPlayer.roleData?.bullets}
+            onRoleClick={() => setShowRoleReveal(true)}
+          />
+        </div>
       </div>
 
       <div className="shrink-0 px-2 py-2">
