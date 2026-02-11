@@ -115,7 +115,7 @@ function GameHome() {
             hash="roles"
             className="mt-2 rounded-full border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[11px] font-semibold text-teal-400 hover:bg-teal-400/20 transition-colors"
           >
-            👻 New: Revenant role replaces Jester!
+            👻 New: Revenant role replaces Jester! Jester removed on public demand.
           </Link>
         </div>
 
