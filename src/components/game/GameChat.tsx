@@ -72,7 +72,9 @@ export function GameChat({
   playerNames = [],
 }: GameChatProps) {
   const [input, setInput] = useState('')
+  const [mentionQuery, setMentionQuery] = useState<{ query: string; start: number } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const nameToColorIndex = useMemo(() => {
     const map = new Map<string, number>()
@@ -82,17 +84,82 @@ export function GameChat({
     return map
   }, [playerNames])
 
+  const filteredPlayers = useMemo(() => {
+    if (!mentionQuery) return []
+    const lowerQuery = mentionQuery.query.toLowerCase()
+    return playerNames.filter((name) => name.toLowerCase().includes(lowerQuery))
+  }, [playerNames, mentionQuery])
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages.length])
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    const selectionStart = e.target.selectionStart || 0
+    setInput(value)
+
+    // Check for mention trigger: look backwards from cursor for @
+    const textBeforeCursor = value.slice(0, selectionStart)
+    const mentionMatch = textBeforeCursor.match(/@([\w\s]*)$/)
+
+    if (mentionMatch) {
+      // Ensure we don't match across multiple words unless it's a name search
+      // (Simple check: if there's a space, it might be part of a name, but usually mentions start immediately.
+      //  Let's allow spaces for multi-word names search, but restart if @ is far back?
+      //  Actually, standard behavior is @term. If term has space, it might break.
+      //  Let's restrict to no spaces or strictly check valid name prefixes if needed.
+      //  For now, allow \w only to keep it robust like WhatsApp which usually searches handles.
+      //  But names here can have spaces. Let's try matching everything after @ until cursor.)
+
+      const query = mentionMatch[1]
+      // If query contains newline or specific punctuation, abort.
+      // For simplicity, let's stick to alphanumeric + spaces, but maybe limit length?
+      setMentionQuery({
+        query,
+        start: selectionStart - mentionMatch[0].length
+      })
+    } else {
+      setMentionQuery(null)
+    }
+  }
+
+  const handleSelectMention = (name: string) => {
+    if (!mentionQuery) return
+    const before = input.slice(0, mentionQuery.start)
+    // We replace the text from @ start up to the current cursor position (implied by input state at time of match?)
+    // Actually, we should replace up to where the user typed.
+    // The mentionMatch was based on cursor position.
+
+    // Let's reconstruct based on current input and correct mentionQuery logic.
+    // The mentionQuery.start is the index of '@'.
+    // The part to replace is `@` + `mentionQuery.query`.
+    // But `mentionQuery.query` updates as they type.
+
+    // Wait, if I type `@Ali`, query is `Ali`.
+    // `start` is index of `@`.
+    // I want to replace `@Ali` with `@Ali `.
+    // But what if they typed `@Ali ` (space)? Then regex /@(\w*)$/ won't match if space is there.
+    // So the mention drawer closes on space.
+    // This is correct behavior usually.
+
+    // So assume we are replacing `@` + `query`.
+    const after = input.slice(mentionQuery.start + mentionQuery.query.length + 1)
+    const newValue = `${before}@${name} ${after}`
+
+    setInput(newValue)
+    setMentionQuery(null)
+    inputRef.current?.focus()
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || disabled) return
     onSend(input.trim())
     setInput('')
+    setMentionQuery(null)
   }
 
   const channelMessages = messages.filter((m) => {
@@ -103,7 +170,7 @@ export function GameChat({
   })
 
   return (
-    <div className={`flex h-full flex-col ${currentChannel === 'wolves' ? 'bg-white/[0.06]' : ''}`}>
+    <div className={`flex h-full flex-col relative ${currentChannel === 'wolves' ? 'bg-white/[0.06]' : ''}`}>
       <div
         ref={scrollRef}
         className="flex-1 space-y-1 overflow-y-auto px-3 py-2"
@@ -151,11 +218,29 @@ export function GameChat({
         })}
       </div>
 
+      {mentionQuery && filteredPlayers.length > 0 && (
+        <div className="absolute bottom-12 left-2 right-2 z-50 animate-slide-up overflow-hidden rounded-lg border border-border bg-popover shadow-lg">
+          <div className="max-h-40 overflow-y-auto p-1">
+            {filteredPlayers.map((name) => (
+              <button
+                key={name}
+                onClick={() => handleSelectMention(name)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-popover-foreground hover:bg-muted"
+              >
+                <span className={cn('block h-1.5 w-1.5 rounded-full', getPlayerColor(nameToColorIndex.get(name) ?? 0).replace('text-', 'bg-'))} />
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex gap-2 border-t border-border p-2">
         <Input
+          ref={inputRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? 'Chat disabled' : placeholder}
+          onChange={handleInputChange}
+          placeholder={placeholder}
           disabled={disabled}
           className="h-8 rounded-lg border border-border bg-secondary font-body text-xs"
           maxLength={200}

@@ -712,8 +712,8 @@ function GamePlayScreen() {
                       : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
                         ? 'Wolf chat disabled during the day'
                         : currentChannel === 'wolves'
-                          ? 'Wolf chat...'
-                          : 'Message the village...'
+                          ? 'Wolf chat (use @ to mention)...'
+                          : 'Mention players with @...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
@@ -780,8 +780,8 @@ function GamePlayScreen() {
                       : chatDisabled && game.phase !== 'night' && isWolfTeam && chatChannel === 'wolves'
                         ? 'Wolf chat disabled during the day'
                         : currentChannel === 'wolves'
-                          ? 'Wolf chat...'
-                          : 'Message the village...'
+                          ? 'Wolf chat (use @ to mention)...'
+                          : 'Mention players with @...'
               }
               playerNames={players?.map((p) => p.name) ?? []}
             />
