@@ -619,7 +619,7 @@ function GamePlayScreen() {
 
       <div className="shrink-0 px-2 py-2">
         <div className={`grid gap-1 justify-items-center ${players.length > 10 ? 'grid-cols-6' : 'grid-cols-5'}`}>
-          {players.map((player, index) => {
+          {[...players].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((player, index) => {
             const isSecondSelected = isDetective && selectedPlayerId2 === player._id
             const isRevealed = player.roleData?.isRevealed
             const hasVoted = game.phase === 'voting' && voters?.some((id) => id === player._id)
@@ -638,6 +638,7 @@ function GamePlayScreen() {
                 isCurrentPlayer={player._id === myPlayer._id}
                 hasVoted={hasVoted}
                 role={isRevealed ? player.role ?? undefined : isMyWolfTeammate ? player.role ?? undefined : player._id === myPlayer._id ? myPlayer.role ?? undefined : undefined}
+                isChaosMode={game.mode === 'chaos'}
                 showRole={!!isRevealed}
                 onClick={
                   player._id !== myPlayer._id && player.isAlive

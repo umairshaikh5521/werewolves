@@ -201,10 +201,13 @@ export const executeStartGame = internalMutation({
     const roles = buildRoleList(dist, players.length)
     const shuffledRoles = shuffle(roles)
 
-    // Chaos Mode: Rename players
+    // Chaos Mode: Rename players & Shuffle Order
     let funnyNames: string[] = []
+    let playerOrder = Array.from({ length: players.length }, (_, i) => i)
+
     if (game.mode === 'chaos') {
       funnyNames = shuffle([...FUNNY_NAMES])
+      playerOrder = shuffle(playerOrder)
     }
 
     for (let i = 0; i < players.length; i++) {
@@ -217,9 +220,11 @@ export const executeStartGame = internalMutation({
         role: roleInfo.role,
         team: roleInfo.team,
         isAlive: true,
+        order: playerOrder[i],
       }
 
       if (game.mode === 'chaos' && funnyNames.length > 0) {
+        patch.originalName = players[i].name
         patch.name = funnyNames[i % funnyNames.length]
       }
 

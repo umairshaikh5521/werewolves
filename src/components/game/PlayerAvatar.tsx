@@ -14,12 +14,14 @@ interface PlayerAvatarProps {
   showReadyStatus?: boolean
   hasVoted?: boolean
   role?: string
+  originalName?: string
   showRole?: boolean
   onClick?: () => void
   size?: 'xs' | 'sm' | 'md' | 'lg'
   playerIndex?: number
   isWolfTeammate?: boolean
   isSelfWolf?: boolean
+  isChaosMode?: boolean
 }
 
 const roleColors: Record<string, string> = {
@@ -71,19 +73,21 @@ export function PlayerAvatar({
   showReadyStatus,
   hasVoted,
   role,
+  originalName,
   showRole,
   onClick,
   size = 'md',
   playerIndex = 0,
   isWolfTeammate = false,
   isSelfWolf = false,
+  isChaosMode = false,
 }: PlayerAvatarProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
   const sizeClasses = {
     xs: 'w-full h-[4.5rem]',
     sm: 'w-full h-20',
-    md: 'w-20 h-24',
+    md: 'w-20 min-h-24',
     lg: 'w-24 h-28',
   }
 
@@ -136,7 +140,7 @@ export function PlayerAvatar({
             !onClick && 'cursor-default'
           )}
         >
-          {isHost && (
+          {isHost && !isChaosMode && (
             <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
           )}
 
@@ -197,6 +201,11 @@ export function PlayerAvatar({
           >
             {isCurrentPlayer ? 'YOU' : name}
           </span>
+          {originalName && (
+            <span className="max-w-full truncate text-[10px] text-muted-foreground/70 -mt-0.5 leading-tight">
+              ({originalName})
+            </span>
+          )}
 
           {showRole && role && (
             <span className={cn('capitalize text-muted-foreground', size === 'xs' ? 'text-[8px]' : 'text-[10px]')}>

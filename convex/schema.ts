@@ -89,6 +89,7 @@ export default defineSchema({
     gameId: v.id('games'),
     userId: v.string(),
     name: v.string(),
+    originalName: v.optional(v.string()),
     role: v.optional(gameRoleValidator),
     team: v.optional(teamValidator),
     isAlive: v.boolean(),
@@ -102,6 +103,7 @@ export default defineSchema({
     wasConverted: v.optional(v.boolean()),
     convertedAtTurn: v.optional(v.number()),
     isReady: v.optional(v.boolean()),
+    order: v.optional(v.number()),
     isMuted: v.optional(v.boolean()),
     revenantAbsorbedRole: v.optional(v.string()),
   })

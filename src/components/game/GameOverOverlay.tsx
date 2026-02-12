@@ -4,6 +4,7 @@ import { PlayerAvatar } from './PlayerAvatar'
 interface Player {
   _id: string
   name: string
+  originalName?: string
   role?: string
   team?: string
   isAlive: boolean
@@ -76,6 +77,7 @@ export function GameOverOverlay({
               <PlayerAvatar
                 key={player._id}
                 name={player.name}
+                originalName={player.originalName}
                 isAlive={player.isAlive}
                 role={player.role}
                 showRole

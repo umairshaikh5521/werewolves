@@ -215,7 +215,7 @@ export const resetToLobby = mutation({
       .collect()
 
     for (const player of players) {
-      await ctx.db.patch(player._id, {
+      const updates: any = {
         role: undefined,
         team: undefined,
         isAlive: true,
@@ -225,7 +225,15 @@ export const resetToLobby = mutation({
         wasConverted: undefined,
         convertedAtTurn: undefined,
         revenantAbsorbedRole: undefined,
-      })
+        order: undefined,
+      }
+
+      if (player.originalName) {
+        updates.name = player.originalName
+        updates.originalName = undefined
+      }
+
+      await ctx.db.patch(player._id, updates)
     }
 
     const actions = await ctx.db
