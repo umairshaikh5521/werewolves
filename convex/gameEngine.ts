@@ -52,7 +52,7 @@ const CHAOS_MESSAGES = {
   votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
   noMajority: "Decision pending... Tareekh pe tareekh mil rahi hai!",
   hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
-  hunterShot: "Patt se Headshot! ${target} finish!",
+  hunterShot: "Patt se Headshot! ${target} to humesha ke liye gaya!",
   hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
   wolfWin: "Game over! Villagers ki lutiya doob gayi!",
   villagerWin: "Party to banti hai boss! Bhediye khatam!",
