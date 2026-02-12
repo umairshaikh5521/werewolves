@@ -55,8 +55,10 @@ export const getMessages = query({
 
     const isWolfTeam = player.role === 'wolf' || player.role === 'kittenWolf' || player.role === 'shadowWolf'
 
-    return allMessages.filter((msg) => {
-      if (msg.channel === 'global') return true
+    return allMessages.filter((msg: any) => {
+      const isRecipient = !msg.recipientId || msg.recipientId === args.playerId
+
+      if (msg.channel === 'global' && isRecipient) return true
       if (msg.channel === 'wolves' && isWolfTeam) return true
       return false
     })

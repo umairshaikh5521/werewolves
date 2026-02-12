@@ -138,6 +138,6 @@ export const roleConfig: Record<string, RoleInfo> = {
     btnColor: 'bg-primary hover:bg-primary/90',
     image: '/villager-photoroom.png',
     team: 'village',
-    ability: 'You have no core night ability, but **Neighborhood Watch** is active. Each night, one random villager spots suspicious activity at a neighbor\'s house (a visit from wolves, seer, or doctor). Share this intel carefully!',
+    ability: 'You have no core night ability, but **System AI** is active. Each night, the System AI alerts one random villager about suspicious activity at a neighbor\'s location (a visit from wolves, seer, or doctor). Share this intel carefully!',
   },
 }

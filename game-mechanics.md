@@ -457,19 +457,19 @@ Roles are automatically assigned based on the number of players in the lobby.
 **Count:** 1-2 (fills remaining slots)
 
 **Abilities:**
-- **Neighborhood Watch (Passive):** Each night, one random Villager spots suspicious activity at a neighbor's house (a visit from wolves, seer, or doctor).
+- **System AI (Passive):** Each night, the System AI alerts one random Villager about suspicious activity at a neighbor's location.
 - Can chat and vote
 
 **Role:**
 - Participate in discussions
 - Vote during voting phase
 - Help identify werewolves through deduction
-- Share intel if you receive a Neighborhood Watch tip
+- Share intel if you receive a System AI alert
 
 **Strategic Notes:**
 - Most common role, but now has occasional intel
 - Voting power is crucial
-- If you get a Neighborhood Watch tip, you know *something* happened at a target player, but not *what*. Use this to cross-reference claims (e.g., if someone claims "I was attacked but saved", and you saw activity at their house, it matches).
+- If you get a System AI alert, you know *something* happened at a target player, but not *what*. Use this to cross-reference claims (e.g., if someone claims "I was attacked but saved", and you saw activity at their house, it matches).
 
 ---
 

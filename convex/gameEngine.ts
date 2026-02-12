@@ -50,7 +50,7 @@ const CHAOS_MESSAGES = {
   noKill: "Subah ho gayi mamu! Sab zinda hain!",
   kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
   votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
-  noMajority: "Decision pending... Tareekh pe tareekh mil rahi hai!",
+  noMajority: "Bade log... badi baatein. Par decision? Zero!",
   hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
   hunterShot: "Patt se Headshot! ${target} to humesha ke liye gaya!",
   hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
@@ -435,7 +435,7 @@ export const transitionPhase = internalMutation({
         return
       }
 
-      // VILLAGER UPDATE: Neighborhood Watch (Gossip)
+      // VILLAGER UPDATE: System AI (Gossip)
       // Give one random villager a hint about night activity
       const villagers = updatedPlayers.filter((p: any) => p.role === 'villager' && p.isAlive)
       if (villagers.length > 0) {
@@ -454,13 +454,13 @@ export const transitionPhase = internalMutation({
           if (targetPlayer && randomVillager) {
             const gossipMsg = game.mode === 'chaos'
               ? `🤫 Pssst! Raat ko ${targetPlayer.name} ke ghar ke paas kuch toh gadbad thi...`
-              : `(Private) You noticed suspicious activity at ${targetPlayer.name}'s house last night...`
+              : `🔒 Someone visited ${targetPlayer.name} last night.`
 
             await ctx.db.insert('chat', {
               gameId: args.gameId,
               senderId: players[0]._id, // System
               recipientId: randomVillager._id,
-              senderName: 'Neighborhood Watch',
+              senderName: 'System AI',
               content: gossipMsg,
               channel: 'global',
               timestamp: Date.now(),

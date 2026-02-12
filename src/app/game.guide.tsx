@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Shield, Skull, Users, Sparkles } from 'lucide-react'
+import { ArrowLeft, Shield, Skull, Users, Sparkles, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { roleConfig } from '@/lib/role-config'
 
@@ -59,6 +59,27 @@ function GameGuide() {
             </p>
             <p>
               <span className="font-semibold text-foreground">Round Limit:</span> The game automatically ends after <span className="font-semibold text-moon-gold">10 rounds</span>. If neither team has won by then, the team with more surviving members wins.
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-2xl border-2 border-indigo-500/30 bg-indigo-500/5 p-4 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Zap className="h-5 w-5 text-indigo-400" />
+            <h2 className="font-display text-lg font-bold text-indigo-400">System AI</h2>
+          </div>
+          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <p>
+              The village is watched by an advanced <span className="font-bold text-indigo-400">System AI</span>.
+            </p>
+            <p>
+              Occasionally, the AI detects suspicious activity during the night and will alert <span className="font-semibold text-foreground">one random Villager</span> via a private message.
+            </p>
+            <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-3 italic text-indigo-300">
+              "🔒 Someone visited [Player Name] last night."
+            </div>
+            <p className="text-xs">
+              If you receive this intel, use it wisely! You know <em>something</em> happened (attack, save, or scan), but not exactly what.
             </p>
           </div>
         </div>

@@ -29,28 +29,39 @@ const channelBadges: Record<string, { bg: string; text: string; label: string }>
 function getSystemMessageStyle(content: string): { bg: string; text: string } {
   const lower = content.toLowerCase()
 
+  // Glitch
+  if (lower.includes('system glitch') || lower.includes('leak ho gaya')) {
+    return { bg: 'bg-destructive/10', text: 'text-destructive font-bold animate-pulse' }
+  }
+
+  // System AI
+  if (lower.includes('someone visited') || lower.includes('pssst') || lower.includes('system ai')) {
+    return { bg: 'bg-indigo-500/10', text: 'text-indigo-400' }
+  }
+
   // Deaths & eliminations → red
-  if (lower.includes('was killed') || lower.includes('has been eliminated') || lower.includes('was the last werewolf')) {
+  if (lower.includes('was killed') || lower.includes('has been eliminated') || lower.includes('was the last werewolf') ||
+    lower.includes('gaya kaam se') || lower.includes('dukh bhari khabar') || lower.includes('headshot') || lower.includes('tumko bhi le doobenge')) {
     return { bg: 'bg-red-400/10', text: 'text-red-400' }
   }
 
   // Survived / saved → green
-  if (lower.includes('survived') || lower.includes('no one died')) {
+  if (lower.includes('survived') || lower.includes('no one died') || lower.includes('subah ho gayi') || lower.includes('maut ko chhuke')) {
     return { bg: 'bg-village-green/10', text: 'text-village-green' }
   }
 
   // No action / tie → muted amber
-  if (lower.includes('no votes') || lower.includes('no majority') || lower.includes('was quiet')) {
+  if (lower.includes('no votes') || lower.includes('no majority') || lower.includes('was quiet') || lower.includes('decision pending') || lower.includes('bade log')) {
     return { bg: 'bg-moon-gold/5', text: 'text-muted-foreground' }
   }
 
   // Wolf pack / conversion → amber
-  if (lower.includes('wolf pack') || lower.includes('converted')) {
+  if (lower.includes('wolf pack') || lower.includes('converted') || lower.includes('swagat nahi karoge') || lower.includes('has risen')) {
     return { bg: 'bg-amber-500/10', text: 'text-amber-500' }
   }
 
   // Game end → gold
-  if (lower.includes('game ends') || lower.includes('maximum rounds')) {
+  if (lower.includes('game ends') || lower.includes('maximum rounds') || lower.includes('lutiya doob gayi') || lower.includes('party to banti hai')) {
     return { bg: 'bg-moon-gold/10', text: 'text-moon-gold' }
   }
 
@@ -182,7 +193,7 @@ export function GameChat({
           </p>
         )}
         {channelMessages.map((msg) => {
-          const isSystem = msg.senderName === 'System'
+          const isSystem = msg.senderName === 'System' || msg.senderName === 'System AI'
           const systemStyle = isSystem ? getSystemMessageStyle(msg.content) : null
           return (
             <div
