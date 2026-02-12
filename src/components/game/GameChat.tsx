@@ -31,7 +31,10 @@ function getSystemMessageStyle(content: string): { bg: string; text: string } {
 
   // Glitch
   if (lower.includes('system glitch') || lower.includes('leak ho gaya')) {
-    return { bg: 'bg-destructive/10', text: 'text-destructive font-bold animate-pulse' }
+    return {
+      bg: 'bg-destructive/10 border-2 border-destructive/40 shadow-[0_0_15px_rgba(239,68,68,0.2)] dark:shadow-[0_0_20px_rgba(239,68,68,0.4)]',
+      text: 'text-destructive font-mono font-bold tracking-wide animate-pulse drop-shadow-sm text-xs'
+    }
   }
 
   // System AI

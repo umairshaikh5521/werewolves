@@ -50,7 +50,7 @@ const CHAOS_MESSAGES = {
   noKill: "Subah ho gayi mamu! Sab zinda hain!",
   kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
   votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
-  noMajority: "Bade log... badi baatein. Par decision? Zero!",
+  noMajority: "Bade log... badi baatein. Par koi majority Nahi!",
   hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
   hunterShot: "Patt se Headshot! ${target} to humesha ke liye gaya!",
   hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
@@ -472,8 +472,12 @@ export const transitionPhase = internalMutation({
       const phaseEndTime = Date.now() + DAY_DURATION
       const patchData: any = { phase: 'day', phaseEndTime }
 
-      // CHAOS MODE: Random Reveal (25% chance if not used yet)
-      if (game.mode === 'chaos' && !game.chaosRevealUsed && Math.random() < 0.25) {
+      // CHAOS MODE: Random Reveal (Guaranteed mostly between Rounds 2-4)
+      const glitchChance = !game.chaosRevealUsed && game.mode === 'chaos' && game.turnNumber >= 2
+        ? (game.turnNumber === 2 ? 0.35 : (game.turnNumber === 3 ? 0.60 : 1.0))
+        : 0
+
+      if (Math.random() < glitchChance) {
         const alivePlayers = updatedPlayers.filter((p: any) => p.isAlive)
         if (alivePlayers.length > 0) {
           const randomPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)]
