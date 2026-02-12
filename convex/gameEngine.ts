@@ -46,7 +46,7 @@ const HUNTER_REVENGE_DURATION = 20_000
 const CHAOS_MESSAGES = {
   nightStart: "Raat ho gayi! Sab so jao varna Gabbar aa jayega!",
   nightKill: "Dukh bhari khabar... ${victim} humare beech nahi raha.",
-  nightSurvival: "Maut ko chhuke tak se wapas aa gaya!",
+  nightSurvival: "Koi to Maut ko chhuke tak se wapas aa gaya!",
   noKill: "Subah ho gayi mamu! Sab zinda hain!",
   kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
   votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",

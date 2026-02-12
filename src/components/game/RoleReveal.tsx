@@ -6,9 +6,10 @@ interface RoleRevealProps {
   role: string
   onDismiss: () => void
   skipReveal?: boolean
+  playerName?: string
 }
 
-export function RoleReveal({ role, onDismiss, skipReveal }: RoleRevealProps) {
+export function RoleReveal({ role, onDismiss, skipReveal, playerName }: RoleRevealProps) {
   const [stage, setStage] = useState<'reveal' | 'shown'>(skipReveal ? 'shown' : 'reveal')
   const config = roleConfig[role] || roleConfig.villager
 
@@ -35,6 +36,14 @@ export function RoleReveal({ role, onDismiss, skipReveal }: RoleRevealProps) {
             <p className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               You are
             </p>
+
+            {playerName && (
+              <div className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
+                <span className="font-display text-sm tracking-wide text-white/90">
+                  Playing as <span className="font-bold text-white">{playerName}</span>
+                </span>
+              </div>
+            )}
 
             <div className="flex items-center justify-center">
               {config.image ? (

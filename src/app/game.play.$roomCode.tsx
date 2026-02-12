@@ -832,6 +832,7 @@ function GamePlayScreen() {
           role={myPlayer.role}
           onDismiss={() => setShowRoleReveal(false)}
           skipReveal={roleRevealShown.current}
+          playerName={myPlayer.name}
         />
       )}
 
