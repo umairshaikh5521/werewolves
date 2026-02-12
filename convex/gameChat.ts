@@ -15,7 +15,11 @@ export const sendMessage = mutation({
     const player = await ctx.db.get(args.playerId)
     if (!player) throw new Error('Player not found')
 
-    if (!player.isAlive) throw new Error('Dead players cannot send messages')
+    if (!player.isAlive) {
+      // Dead players cannot chat, but return silently to avoid client errors
+      console.log(`Dead player ${player.name} tried to chat. Ignoring.`)
+      return null
+    }
 
     if (args.channel === 'global') {
       if (game.phase === 'night') throw new Error('Cannot chat during night')

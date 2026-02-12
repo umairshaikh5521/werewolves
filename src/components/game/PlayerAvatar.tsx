@@ -22,6 +22,7 @@ interface PlayerAvatarProps {
   isWolfTeammate?: boolean
   isSelfWolf?: boolean
   isChaosMode?: boolean
+  showRevenantIcon?: boolean
 }
 
 const roleColors: Record<string, string> = {
@@ -81,6 +82,7 @@ export function PlayerAvatar({
   isWolfTeammate = false,
   isSelfWolf = false,
   isChaosMode = false,
+  showRevenantIcon = false,
 }: PlayerAvatarProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
@@ -142,6 +144,12 @@ export function PlayerAvatar({
         >
           {isHost && !isChaosMode && (
             <Crown className="absolute -top-2 -right-1 h-4 w-4 text-moon-gold" />
+          )}
+
+          {showRevenantIcon && (
+            <div className="absolute -top-1 -left-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500/80 border border-teal-400">
+              <span className="text-[10px]">👻</span>
+            </div>
           )}
 
 

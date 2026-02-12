@@ -82,6 +82,7 @@ export function GameOverOverlay({
                 role={player.role}
                 showRole
                 size="md"
+                showRevenantIcon={player.role === 'revenant'}
                 playerIndex={index}
               />
             ))}

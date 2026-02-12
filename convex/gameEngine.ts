@@ -477,8 +477,8 @@ export const transitionPhase = internalMutation({
       const phaseEndTime = Date.now() + DAY_DURATION
       const patchData: any = { phase: 'day', phaseEndTime }
 
-      // CHAOS MODE: Random Reveal (Guaranteed mostly between Rounds 2-4)
-      const glitchChance = !game.chaosRevealUsed && game.mode === 'chaos' && game.turnNumber >= 2
+      // MOONRISE AI: Random Role Reveal (Guaranteed mostly between Rounds 2-4)
+      const glitchChance = !game.chaosRevealUsed && game.turnNumber >= 2
         ? (game.turnNumber === 2 ? 0.35 : (game.turnNumber === 3 ? 0.60 : 1.0))
         : 0
 
@@ -502,11 +502,15 @@ export const transitionPhase = internalMutation({
 
           patchData.chaosRevealUsed = true
 
+          const glitchMsg = game.mode === 'chaos'
+            ? `⚠️ MOONRISE AI: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${formatRole(randomRole)} hai... shayad...`
+            : `⚠️ MOONRISE AI: Role Leaked ${randomPlayer.name} is a  ${formatRole(randomRole)}, probably.`
+
           await ctx.db.insert('chat', {
             gameId: args.gameId,
             senderId: players[0]._id,
             senderName: 'System',
-            content: `⚠️ SYSTEM GLITCH: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${formatRole(randomRole)} hai... shayad...`,
+            content: glitchMsg,
             channel: 'global',
             timestamp: Date.now(),
           })
