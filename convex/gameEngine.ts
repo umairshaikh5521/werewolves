@@ -43,6 +43,39 @@ const DAY_DURATION = 60_000
 const MAX_ROUNDS = 10
 const HUNTER_REVENGE_DURATION = 20_000
 
+const CHAOS_MESSAGES = {
+  nightStart: "Raat ho gayi! Sab so jao varna Gabbar aa jayega!",
+  nightKill: "Dukh bhari khabar... ${victim} humare beech nahi raha.",
+  nightSurvival: "Maut ko chhuke tak se wapas aa gaya!",
+  noKill: "Subah ho gayi mamu! Sab zinda hain!",
+  kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
+  votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
+  noMajority: "Decision pending... Tareekh pe tareekh mil rahi hai!",
+  hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
+  hunterShot: "Patt se Headshot! ${target} finish!",
+  hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
+  wolfWin: "Game over! Villagers ki lutiya doob gayi!",
+  villagerWin: "Party to banti hai boss! Bhediye khatam!",
+  revenantAbility: "Revenant ne ability use ki!",
+  kittenConvertWolfChat: "Swagat nahi karoge humara? ${target} is a wolf now!",
+  revenantJoinWolfChat: "👻 ${name} has risen... Rest In Peace, Villagers!"
+}
+
+function getChaosMessage(type: keyof typeof CHAOS_MESSAGES, params: Record<string, string> = {}): string {
+  let message = CHAOS_MESSAGES[type]
+  for (const [key, value] of Object.entries(params)) {
+    message = message.replace(`\${${key}}`, value)
+  }
+  return message
+}
+
+const FUNNY_NAMES = [
+  'Chintu', 'Pintu', 'Baburao', 'Raju', 'Shyam', 'Kachra Seth', 'Majnu Bhai', 'Uday Shetty',
+  'Vasooli Bhai', 'Jethalal', 'Popatlal', 'Bagha', 'Virus', 'Chatur', 'Crime Master Gogo',
+  'Dayaben', 'Hansa', 'Monisha', 'Gopi Bahu', 'Kokila Ben', 'Poo', 'Datto', 'Angoori Bhabhi',
+  'Tuntun Mausi', 'Binod'
+]
+
 function shuffle<T>(array: T[]): T[] {
   const arr = [...array]
   for (let i = arr.length - 1; i > 0; i--) {
@@ -169,6 +202,12 @@ export const executeStartGame = internalMutation({
     const roles = buildRoleList(dist, players.length)
     const shuffledRoles = shuffle(roles)
 
+    // Chaos Mode: Rename players
+    let funnyNames: string[] = []
+    if (game.mode === 'chaos') {
+      funnyNames = shuffle([...FUNNY_NAMES])
+    }
+
     for (let i = 0; i < players.length; i++) {
       const roleInfo = shuffledRoles[i]
       if (!roleInfo) {
@@ -179,6 +218,10 @@ export const executeStartGame = internalMutation({
         role: roleInfo.role,
         team: roleInfo.team,
         isAlive: true,
+      }
+
+      if (game.mode === 'chaos' && funnyNames.length > 0) {
+        patch.name = funnyNames[i % funnyNames.length]
       }
 
       const roleData = buildRoleData(roleInfo.role)
@@ -208,38 +251,7 @@ export const executeStartGame = internalMutation({
 })
 
 
-const CHAOS_MESSAGES = {
-  nightStart: "Raat ho gayi! Sab so jao varna Gabbar aa jayega!",
-  nightKill: "Dukh bhari khabar... ${victim} humare beech nahi raha.",
-  nightSurvival: "Maut ko chhuke tak se wapas aa gaya!",
-  noKill: "Subah ho gayi mamu! Sab zinda hain!",
-  kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
-  votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
-  noMajority: "Decision pending... Tareekh pe tareekh mil rahi hai!",
-  hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
-  hunterShot: "Patt se Headshot! ${target} finish!",
-  hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
-  wolfWin: "Game over! Villagers ki lutiya doob gayi!",
-  villagerWin: "Party to banti hai boss! Bhediye khatam!",
-  revenantAbility: "Bhoot hoon main! Revenant ne wapas entry maari!",
-  kittenConvertWolfChat: "Swagat nahi karoge humara? ${target} is a wolf now!",
-  revenantJoinWolfChat: "👻 ${name} has risen... Rest In Peace, Villagers!"
-}
 
-function getChaosMessage(type: keyof typeof CHAOS_MESSAGES, params: Record<string, string> = {}): string {
-  let message = CHAOS_MESSAGES[type]
-  for (const [key, value] of Object.entries(params)) {
-    message = message.replace(`\${${key}}`, value)
-  }
-  return message
-}
-
-const FUNNY_NAMES = [
-  'Chintu', 'Pintu', 'Baburao', 'Raju', 'Shyam', 'Kachra Seth', 'Majnu Bhai', 'Uday Shetty',
-  'Vasooli Bhai', 'Jethalal', 'Popatlal', 'Bagha', 'Virus', 'Chatur', 'Crime Master Gogo',
-  'Dayaben', 'Hansa', 'Monisha', 'Gopi Bahu', 'Kokila Ben', 'Poo', 'Datto', 'Angoori Bhabhi',
-  'Tuntun Mausi', 'Binod'
-]
 
 export const startGame = mutation({
   args: { gameId: v.id('games'), userId: v.string() },
