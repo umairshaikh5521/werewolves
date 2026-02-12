@@ -1027,6 +1027,33 @@ const MAX_ROUNDS = 10
 
 ---
 
+## Chaos Mode
+
+Chaos Mode is a special game variant that adds unpredictability and humor to the standard werewolf experience. It is toggleable by the host in the lobby.
+
+### Features
+
+#### 1. Identities & Renaming
+- All players are assigned random **Indian Meme Names** (e.g., *Baburao, Chintu, Majnu Bhai, Crime Master Gogo*).
+- Real player names are hidden during gameplay to create confusion.
+- Players can see their own Chaos Identity in their role overlay (and by clicking their role pill).
+
+#### 2. Desi System Messages
+- Standard game notifications are replaced with **Hindi slang and Bollywood dialogues**.
+- **Night Start:** *"Raat ho gayi! Sab so jao varna Gabbar aa jayega!"*
+- **Death:** *"Tata, Goodbye, Khatam! [Player] gaya kaam se!"*
+- **Hunter Shot:** *"Patt se Headshot! [Player] finish!"*
+- **Survival:** *"Koi to Maut ko chhuke tak se wapas aa gaya!"*
+
+#### 3. System Glitch Reveal (The "Jhooth Bole Kauwa Kaate" Mechanic)
+- **Trigger:** Random chance (25%) at the start of each Day Phase.
+- **Effect:** The System "accidentally" leaks a player's role in Global Chat.
+- **Reliability:** The revealed role is **NOT GUARANTEED TO BE TRUE**. It selects a random role from the pool, so it might be a valid leak or a complete lie to cause panic.
+- **Frequency:** Happens only once per game.
+- **Message:** *"⚠️ SYSTEM GLITCH: [Player] ka role leak ho gaya! Wo pakka [Role] hai... shayad..."*
+
+---
+
 ## Game Balance Notes
 
 ### Role Power Levels

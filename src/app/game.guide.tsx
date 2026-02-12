@@ -63,6 +63,31 @@ function GameGuide() {
           </div>
         </div>
 
+        <div id="chaos" className="mb-8 scroll-mt-20 rounded-2xl border-2 border-destructive/30 bg-destructive/5 p-4 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-destructive" />
+            <h2 className="font-display text-lg font-bold text-destructive">Chaos Mode</h2>
+          </div>
+          <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+            <p>
+              Tired of playing by the rules? Turn on <span className="font-bold text-destructive">Chaos Mode</span> in the lobby!
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>
+                <span className="font-semibold text-foreground">Funny Identities:</span> Everyone gets assigned a random Indian meme name (Baburao, Jethalal, Majnu Bhai, Kachra Seth, etc).
+              </li>
+              <li>
+                <span className="font-semibold text-foreground">Desi System Messages:</span> All game notifications are replaced with hilarious movie dialogues and slang.
+                <br />
+                <span className="italic text-xs">"Subah ho gayi mamu! Sab zinda hain!"</span>
+              </li>
+              <li>
+                <span className="font-semibold text-foreground">System Glitch:</span> Once per game, the system might "accidentally" leak a player's role... but can you trust it?
+              </li>
+            </ul>
+          </div>
+        </div>
+
         <div className="mb-8 rounded-2xl border-2 border-border bg-card p-4 sm:p-6">
           <div className="mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />

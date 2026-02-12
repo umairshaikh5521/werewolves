@@ -72,8 +72,7 @@ function getChaosMessage(type: keyof typeof CHAOS_MESSAGES, params: Record<strin
 const FUNNY_NAMES = [
   'Chintu', 'Pintu', 'Baburao', 'Raju', 'Shyam', 'Kachra Seth', 'Majnu Bhai', 'Uday Shetty',
   'Vasooli Bhai', 'Jethalal', 'Popatlal', 'Bagha', 'Virus', 'Chatur', 'Crime Master Gogo',
-  'Dayaben', 'Hansa', 'Monisha', 'Gopi Bahu', 'Kokila Ben', 'Poo', 'Datto', 'Angoori Bhabhi',
-  'Tuntun Mausi', 'Binod'
+  'Dayaben', 'Hansa', 'Gopi Bahu', 'Poo', 'Tuntun Mausi', 'Binod'
 ]
 
 function shuffle<T>(array: T[]): T[] {
@@ -437,7 +436,30 @@ export const transitionPhase = internalMutation({
       }
 
       const phaseEndTime = Date.now() + DAY_DURATION
-      await ctx.db.patch(args.gameId, { phase: 'day', phaseEndTime })
+      const patchData: any = { phase: 'day', phaseEndTime }
+
+      // CHAOS MODE: Random Reveal (25% chance if not used yet)
+      if (game.mode === 'chaos' && !game.chaosRevealUsed && Math.random() < 0.25) {
+        const alivePlayers = updatedPlayers.filter((p: any) => p.isAlive)
+        if (alivePlayers.length > 0) {
+          const randomPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)]
+          const possibleRoles = ['wolf', 'seer', 'doctor', 'villager', 'hunter', 'gunner', 'detective', 'revenant', 'kittenWolf', 'shadowWolf']
+          const randomRole = possibleRoles[Math.floor(Math.random() * possibleRoles.length)]
+
+          patchData.chaosRevealUsed = true
+
+          await ctx.db.insert('chat', {
+            gameId: args.gameId,
+            senderId: players[0]._id, // System message (using host/first player ID as sender fallback, but name is System)
+            senderName: 'System',
+            content: `⚠️ SYSTEM GLITCH: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${randomRole} hai... shayad...`,
+            channel: 'global',
+            timestamp: Date.now(),
+          })
+        }
+      }
+
+      await ctx.db.patch(args.gameId, patchData)
       await ctx.scheduler.runAfter(DAY_DURATION, internal.gameEngine.transitionPhase, {
         gameId: args.gameId,
         expectedTurn: game.turnNumber,

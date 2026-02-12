@@ -116,10 +116,10 @@ function GameHome() {
           </p>
           <Link
             to="/game/guide"
-            hash="roles"
-            className="mt-2 rounded-full border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[11px] font-semibold text-teal-400 hover:bg-teal-400/20 transition-colors"
+            hash="chaos"
+            className="mt-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/20 transition-colors animate-pulse"
           >
-            👻 New Role: Revenant role replaces Jester!
+            🔥 NEW: Chaos Mode is Here!
           </Link>
         </div>
 
@@ -150,7 +150,10 @@ function GameHome() {
               <Sparkles className="h-4 w-4 text-destructive" />
               <div className="flex flex-col">
                 <Label htmlFor="chaos-mode" className="font-display font-bold text-destructive">Chaos Mode</Label>
-                <span className="text-[10px] text-muted-foreground">Funny Indian names for everyone</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground leading-tight">Meme names, Desi messages</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight">& System Glitch Reveal!</span>
+                </div>
               </div>
             </div>
             <Switch
