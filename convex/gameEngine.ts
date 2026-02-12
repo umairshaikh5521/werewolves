@@ -483,19 +483,30 @@ export const transitionPhase = internalMutation({
         : 0
 
       if (Math.random() < glitchChance) {
-        const alivePlayers = updatedPlayers.filter((p: any) => p.isAlive)
-        if (alivePlayers.length > 0) {
-          const randomPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)]
-          const possibleRoles = ['wolf', 'seer', 'doctor', 'villager', 'hunter', 'gunner', 'detective', 'revenant', 'kittenWolf', 'shadowWolf']
-          const randomRole = possibleRoles[Math.floor(Math.random() * possibleRoles.length)]
+        // Exclude revealed players (e.g. Gunner who shot)
+        const candidates = updatedPlayers.filter((p: any) => p.isAlive && !p.roleData?.isRevealed)
+
+        if (candidates.length > 0) {
+          const randomPlayer = candidates[Math.floor(Math.random() * candidates.length)]
+
+          // Get unique roles present in the current game
+          const presentRoles = Array.from(new Set(updatedPlayers.map((p: any) => p.role)))
+          const randomRole = presentRoles[Math.floor(Math.random() * presentRoles.length)]
+
+          // Format role name
+          const formatRole = (r: string) => {
+            if (r === 'kittenWolf') return 'Kitten Wolf'
+            if (r === 'shadowWolf') return 'Shadow Wolf'
+            return r.charAt(0).toUpperCase() + r.slice(1)
+          }
 
           patchData.chaosRevealUsed = true
 
           await ctx.db.insert('chat', {
             gameId: args.gameId,
-            senderId: players[0]._id, // System message (using host/first player ID as sender fallback, but name is System)
+            senderId: players[0]._id,
             senderName: 'System',
-            content: `⚠️ SYSTEM GLITCH: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${randomRole} hai... shayad...`,
+            content: `⚠️ SYSTEM GLITCH: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${formatRole(randomRole)} hai... shayad...`,
             channel: 'global',
             timestamp: Date.now(),
           })
