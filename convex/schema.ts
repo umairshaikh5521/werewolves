@@ -121,6 +121,7 @@ export default defineSchema({
   chat: defineTable({
     gameId: v.id('games'),
     senderId: v.id('players'),
+    recipientId: v.optional(v.id('players')),
     senderName: v.string(),
     content: v.string(),
     channel: chatChannelValidator,

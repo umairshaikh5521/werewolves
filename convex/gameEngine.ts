@@ -435,6 +435,40 @@ export const transitionPhase = internalMutation({
         return
       }
 
+      // VILLAGER UPDATE: Neighborhood Watch (Gossip)
+      // Give one random villager a hint about night activity
+      const villagers = updatedPlayers.filter((p: any) => p.role === 'villager' && p.isAlive)
+      if (villagers.length > 0) {
+        const uniqueTargets = new Set<string>()
+        actions.forEach((a: any) => {
+          if (a.targetId) uniqueTargets.add(a.targetId)
+          if (a.targetId2) uniqueTargets.add(a.targetId2)
+        })
+
+        if (uniqueTargets.size > 0) {
+          const targetIds = Array.from(uniqueTargets)
+          const randomTargetId = targetIds[Math.floor(Math.random() * targetIds.length)]
+          const targetPlayer = updatedPlayers.find((p: any) => p._id === randomTargetId)
+          const randomVillager = villagers[Math.floor(Math.random() * villagers.length)] // Pick ONE lucky villager
+
+          if (targetPlayer && randomVillager) {
+            const gossipMsg = game.mode === 'chaos'
+              ? `🤫 Pssst! Raat ko ${targetPlayer.name} ke ghar ke paas kuch toh gadbad thi...`
+              : `(Private) You noticed suspicious activity at ${targetPlayer.name}'s house last night...`
+
+            await ctx.db.insert('chat', {
+              gameId: args.gameId,
+              senderId: players[0]._id, // System
+              recipientId: randomVillager._id,
+              senderName: 'Neighborhood Watch',
+              content: gossipMsg,
+              channel: 'global',
+              timestamp: Date.now(),
+            })
+          }
+        }
+      }
+
       const phaseEndTime = Date.now() + DAY_DURATION
       const patchData: any = { phase: 'day', phaseEndTime }
 

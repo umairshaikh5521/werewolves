@@ -134,10 +134,10 @@ export const roleConfig: Record<string, RoleInfo> = {
     bg: 'bg-secondary',
     border: 'border-border',
     title: 'Villager',
-    description: 'Find the wolves among you. Discuss, deduce, and vote to protect the village.',
+    description: 'Find the wolves among you. Occasionally, you might spot suspicious activity at night.',
     btnColor: 'bg-primary hover:bg-primary/90',
     image: '/villager-photoroom.png',
     team: 'village',
-    ability: 'You have no special ability, but your vote is your power. Pay attention to discussions, watch for suspicious behavior, and work with other villagers to identify and eliminate the werewolves before they outnumber you.',
+    ability: 'You have no core night ability, but **Neighborhood Watch** is active. Each night, one random villager spots suspicious activity at a neighbor\'s house (a visit from wolves, seer, or doctor). Share this intel carefully!',
   },
 }

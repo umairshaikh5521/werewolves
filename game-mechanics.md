@@ -457,19 +457,19 @@ Roles are automatically assigned based on the number of players in the lobby.
 **Count:** 1-2 (fills remaining slots)
 
 **Abilities:**
-- No special night action
+- **Neighborhood Watch (Passive):** Each night, one random Villager spots suspicious activity at a neighbor's house (a visit from wolves, seer, or doctor).
 - Can chat and vote
 
 **Role:**
 - Participate in discussions
 - Vote during voting phase
 - Help identify werewolves through deduction
+- Share intel if you receive a Neighborhood Watch tip
 
 **Strategic Notes:**
-- Most common role
+- Most common role, but now has occasional intel
 - Voting power is crucial
-- Must pay attention to behavior and claims
-- Can pretend to be power roles to draw wolf attacks
+- If you get a Neighborhood Watch tip, you know *something* happened at a target player, but not *what*. Use this to cross-reference claims (e.g., if someone claims "I was attacked but saved", and you saw activity at their house, it matches).
 
 ---
 

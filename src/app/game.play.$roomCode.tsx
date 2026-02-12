@@ -736,7 +736,9 @@ function GamePlayScreen() {
 
           <div className="flex-1" style={{ minHeight: 0 }}>
             <GameChat
-              messages={(messages || []).map((m) => ({ ...m, _id: m._id as string }))}
+              messages={(messages || [])
+                .filter((m) => !m.recipientId || m.recipientId === myPlayer._id)
+                .map((m) => ({ ...m, _id: m._id as string }))}
               onSend={handleSendMessage}
               currentChannel={currentChannel}
               disabled={chatDisabled}
