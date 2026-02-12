@@ -62,6 +62,7 @@ Equal or outnumber non-werewolf players
 - After night phase resolution: `wolves.length >= nonWolves.length`
 - After voting phase resolution: `wolves.length >= nonWolves.length`
 - After Hunter revenge: `wolves.length >= nonWolves.length`
+- After Revenant ability: `wolves.length >= nonWolves.length`
 
 **Important Notes:**
 - Converted players (bitten by Kitten Wolf) count as werewolves

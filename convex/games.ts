@@ -14,6 +14,7 @@ export const createGame = mutation({
   args: {
     hostUserId: v.string(),
     hostName: v.string(),
+    mode: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     let roomCode = generateRoomCode()
@@ -37,6 +38,7 @@ export const createGame = mutation({
       turnNumber: 0,
       phase: 'night',
       phaseEndTime: 0,
+      mode: args.mode,
     })
 
     await ctx.db.insert('players', {

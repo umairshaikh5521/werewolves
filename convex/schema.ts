@@ -81,6 +81,7 @@ export default defineSchema({
     startCountdownAt: v.optional(v.number()),
     hunterRevengePlayerId: v.optional(v.id('players')),
     previousPhase: v.optional(v.string()),
+    mode: v.optional(v.string()),
   }).index('by_code', ['roomCode']),
 
   players: defineTable({

@@ -207,6 +207,40 @@ export const executeStartGame = internalMutation({
   },
 })
 
+
+const CHAOS_MESSAGES = {
+  nightStart: "Raat ho gayi! Sab so jao varna Gabbar aa jayega!",
+  nightKill: "Dukh bhari khabar... ${victim} humare beech nahi raha.",
+  nightSurvival: "Maut ko chhuke tak se wapas aa gaya!",
+  noKill: "Subah ho gayi mamu! Sab zinda hain!",
+  kittenConvert: "Kuch to gadbad hai Daya... Koi mara nahi par kuch to hua hai!",
+  votingEliminated: "Tata, Goodbye, Khatam! ${victim} gaya kaam se!",
+  noMajority: "Decision pending... Tareekh pe tareekh mil rahi hai!",
+  hunterRevenge: "Hum to doobenge sanam, tumko bhi le doobenge!",
+  hunterShot: "Patt se Headshot! ${target} finish!",
+  hunterMiss: "Haath kaanp gaye Hunter ke! Goli miss!",
+  wolfWin: "Game over! Villagers ki lutiya doob gayi!",
+  villagerWin: "Party to banti hai boss! Bhediye khatam!",
+  revenantAbility: "Bhoot hoon main! Revenant ne wapas entry maari!",
+  kittenConvertWolfChat: "Swagat nahi karoge humara? ${target} is a wolf now!",
+  revenantJoinWolfChat: "👻 ${name} has risen... Rest In Peace, Villagers!"
+}
+
+function getChaosMessage(type: keyof typeof CHAOS_MESSAGES, params: Record<string, string> = {}): string {
+  let message = CHAOS_MESSAGES[type]
+  for (const [key, value] of Object.entries(params)) {
+    message = message.replace(`\${${key}}`, value)
+  }
+  return message
+}
+
+const FUNNY_NAMES = [
+  'Chintu', 'Pintu', 'Baburao', 'Raju', 'Shyam', 'Kachra Seth', 'Majnu Bhai', 'Uday Shetty',
+  'Vasooli Bhai', 'Jethalal', 'Popatlal', 'Bagha', 'Virus', 'Chatur', 'Crime Master Gogo',
+  'Dayaben', 'Hansa', 'Monisha', 'Gopi Bahu', 'Kokila Ben', 'Poo', 'Datto', 'Angoori Bhabhi',
+  'Tuntun Mausi', 'Binod'
+]
+
 export const startGame = mutation({
   args: { gameId: v.id('games'), userId: v.string() },
   handler: async (ctx, args) => {
@@ -241,6 +275,12 @@ export const startGame = mutation({
       throw new Error(`Role count mismatch: ${shuffledRoles.length} roles for ${players.length} players`)
     }
 
+    // Chaos Mode: Rename players
+    let funnyNames: string[] = []
+    if (game.mode === 'chaos') {
+      funnyNames = shuffle([...FUNNY_NAMES])
+    }
+
     console.log(`[Game ${args.gameId}] Starting with ${players.length} players`)
     console.log(`[Game ${args.gameId}] Role distribution:`, dist)
     console.log(`[Game ${args.gameId}] Assigning roles:`, shuffledRoles.map(r => r.role).join(', '))
@@ -257,13 +297,17 @@ export const startGame = mutation({
         isAlive: true,
       }
 
+      if (game.mode === 'chaos' && funnyNames.length > 0) {
+        patch.name = funnyNames[i % funnyNames.length]
+      }
+
       const roleData = buildRoleData(roleInfo.role)
       if (roleData !== undefined) {
         patch.roleData = roleData
       }
 
       await ctx.db.patch(players[i]._id, patch)
-      console.log(`[Game ${args.gameId}] Assigned ${roleInfo.role} (${roleInfo.team}) to player ${players[i].name}`)
+      console.log(`[Game ${args.gameId}] Assigned ${roleInfo.role} (${roleInfo.team}) to player ${players[i].name} (Renamed: ${patch.name || 'No'})`)
     }
 
     const assignedPlayers = await ctx.db
@@ -331,9 +375,17 @@ export const transitionPhase = internalMutation({
       const winner = checkWinCondition(updatedPlayers)
 
       if (winner) {
-        const endReason = winner === 'good'
-          ? 'All werewolves have been eliminated'
-          : 'The werewolves have overtaken the village'
+        let endReason = ''
+        if (game.mode === 'chaos') {
+          endReason = winner === 'good'
+            ? getChaosMessage('villagerWin')
+            : getChaosMessage('wolfWin')
+        } else {
+          endReason = winner === 'good'
+            ? 'All werewolves have been eliminated'
+            : 'The werewolves have overtaken the village'
+        }
+
         await ctx.db.patch(args.gameId, {
           status: 'ended',
           winningTeam: winner,
@@ -351,11 +403,16 @@ export const transitionPhase = internalMutation({
           hunterRevengePlayerId: nightResult.hunterPlayerId,
           previousPhase: 'night',
         })
+
+        const msg = game.mode === 'chaos'
+          ? getChaosMessage('hunterRevenge')
+          : '🏹 The Hunter has fallen! With their dying breath, they take aim...'
+
         await ctx.db.insert('chat', {
           gameId: args.gameId,
           senderId: nightResult.hunterPlayerId,
           senderName: 'System',
-          content: '🏹 The Hunter has fallen! With their dying breath, they take aim...',
+          content: msg,
           channel: 'global',
           timestamp: Date.now(),
         })
@@ -384,7 +441,7 @@ export const transitionPhase = internalMutation({
         expectedPhase: 'voting',
       })
     } else if (game.phase === 'voting') {
-      const voteResult = await resolveVoting(ctx, args.gameId, players, actions)
+      const voteResult = await resolveVoting(ctx, args.gameId, players, actions, game)
 
       const updatedPlayers = await ctx.db
         .query('players')
@@ -394,13 +451,20 @@ export const transitionPhase = internalMutation({
       const winner = checkWinCondition(updatedPlayers)
 
       if (winner) {
-        const endReason = voteResult.eliminatedPlayer
-          ? winner === 'good'
-            ? `${voteResult.eliminatedPlayer.name} was the last werewolf!`
-            : `The werewolves have overtaken the village`
-          : winner === 'good'
-            ? 'All werewolves have been eliminated'
-            : 'The werewolves have overtaken the village'
+        let endReason = ''
+        if (game.mode === 'chaos') {
+          endReason = winner === 'good'
+            ? getChaosMessage('villagerWin')
+            : getChaosMessage('wolfWin')
+        } else {
+          endReason = voteResult.eliminatedPlayer
+            ? winner === 'good'
+              ? `${voteResult.eliminatedPlayer.name} was the last werewolf!`
+              : `The werewolves have overtaken the village`
+            : winner === 'good'
+              ? 'All werewolves have been eliminated'
+              : 'The werewolves have overtaken the village'
+        }
         await ctx.db.patch(args.gameId, {
           status: 'ended',
           winningTeam: winner,
@@ -418,11 +482,16 @@ export const transitionPhase = internalMutation({
           hunterRevengePlayerId: voteResult.eliminatedPlayer._id,
           previousPhase: 'voting',
         })
+
+        const msg = game.mode === 'chaos'
+          ? getChaosMessage('hunterRevenge')
+          : '🏹 The Hunter has fallen! With their dying breath, they take aim...'
+
         await ctx.db.insert('chat', {
           gameId: args.gameId,
           senderId: voteResult.eliminatedPlayer._id,
           senderName: 'System',
-          content: '🏹 The Hunter has fallen! With their dying breath, they take aim...',
+          content: msg,
           channel: 'global',
           timestamp: Date.now(),
         })
@@ -479,21 +548,30 @@ export const transitionPhase = internalMutation({
         const hunter = players.find((p: any) => p._id === game.hunterRevengePlayerId)
         if (target && target.isAlive) {
           await ctx.db.patch(target._id, { isAlive: false })
+
+          const msg = game.mode === 'chaos'
+            ? getChaosMessage('hunterShot', { target: target.name })
+            : `🏹 ${hunter?.name || 'The Hunter'}'s final shot strikes ${target.name}!`
+
           await ctx.db.insert('chat', {
             gameId: args.gameId,
             senderId: game.hunterRevengePlayerId || players[0]._id,
             senderName: 'System',
-            content: `🏹 ${hunter?.name || 'The Hunter'}'s final shot strikes ${target.name}!`,
+            content: msg,
             channel: 'global',
             timestamp: Date.now(),
           })
         }
       } else {
+        const msg = game.mode === 'chaos'
+          ? getChaosMessage('hunterMiss')
+          : `The Hunter\'s aim falters... no shot was fired.`
+
         await ctx.db.insert('chat', {
           gameId: args.gameId,
           senderId: game.hunterRevengePlayerId || players[0]._id,
           senderName: 'System',
-          content: `The Hunter\'s aim falters... no shot was fired.`,
+          content: msg,
           channel: 'global',
           timestamp: Date.now(),
         })
@@ -513,12 +591,21 @@ export const transitionPhase = internalMutation({
 
       const winner = checkWinCondition(updatedPlayers)
       if (winner) {
+        let endReason = ''
+        if (game.mode === 'chaos') {
+          endReason = winner === 'good'
+            ? getChaosMessage('villagerWin')
+            : getChaosMessage('wolfWin')
+        } else {
+          endReason = winner === 'good'
+            ? 'The Hunter\'s final shot took down the last werewolf!'
+            : 'The werewolves have overtaken the village'
+        }
+
         await ctx.db.patch(args.gameId, {
           status: 'ended',
           winningTeam: winner,
-          endReason: winner === 'good'
-            ? 'The Hunter\'s final shot took down the last werewolf!'
-            : 'The werewolves have overtaken the village'
+          endReason
         })
         return
       }
@@ -619,6 +706,8 @@ async function resolveNight(
     }
   }
 
+
+
   // 3. Process Kitten Wolf conversion
   const convertAction = actions.find((a: any) => a.type === 'convert')
   if (convertAction) {
@@ -633,20 +722,29 @@ async function resolveNight(
         convertedAtTurn: game.turnNumber,
       })
 
+      const msg = game.mode === 'chaos'
+        ? getChaosMessage('kittenConvert')
+        : 'Strange... the village was quiet last night. No one died.'
+
       await ctx.db.insert('chat', {
         gameId,
         senderId: players[0]._id,
         senderName: 'System',
-        content: 'Strange... the village was quiet last night. No one died.',
+        content: msg,
         channel: 'global',
         timestamp: Date.now(),
       })
+
+
+      const wolfMsg = game.mode === 'chaos'
+        ? getChaosMessage('kittenConvertWolfChat', { target: target.name })
+        : `${target.name} has joined the wolf pack.`
 
       await ctx.db.insert('chat', {
         gameId,
         senderId: target._id,
         senderName: 'System',
-        content: `${target.name} has joined the wolf pack.`,
+        content: wolfMsg,
         channel: 'wolves',
         timestamp: Date.now(),
       })
@@ -686,11 +784,15 @@ async function resolveNight(
           result.hunterPlayerId = targetId
         }
 
+        const msg = game.mode === 'chaos'
+          ? getChaosMessage('nightKill', { victim: victim?.name || 'Someone' })
+          : `${victim?.name || 'Someone'} was killed during the night.`
+
         await ctx.db.insert('chat', {
           gameId,
           senderId: players[0]._id,
           senderName: 'System',
-          content: `${victim?.name || 'Someone'} was killed during the night.`,
+          content: msg,
           channel: 'global',
           timestamp: Date.now(),
         })
@@ -699,11 +801,15 @@ async function resolveNight(
         return result
       }
 
+      const msg = game.mode === 'chaos'
+        ? getChaosMessage('nightSurvival', { target: "Someone" })
+        : 'Someone was attacked but survived the night!'
+
       await ctx.db.insert('chat', {
         gameId,
         senderId: players[0]._id,
         senderName: 'System',
-        content: 'Someone was attacked but survived the night!',
+        content: msg,
         channel: 'global',
         timestamp: Date.now(),
       })
@@ -713,11 +819,15 @@ async function resolveNight(
     }
   }
 
+  const msg = game.mode === 'chaos'
+    ? getChaosMessage('noKill')
+    : 'The village wakes up... No one died last night!'
+
   await ctx.db.insert('chat', {
     gameId,
     senderId: players[0]._id,
     senderName: 'System',
-    content: 'The village wakes up... No one died last night!',
+    content: msg,
     channel: 'global',
     timestamp: Date.now(),
   })
@@ -770,23 +880,30 @@ async function processRevenantAbsorption(
 
   await ctx.db.patch(revenant._id, patch)
 
-  // Notify public chat
+  const msg = game.mode === 'chaos'
+    ? getChaosMessage('revenantAbility')
+    : '👻 The Revenant has used its ability.'
+
   await ctx.db.insert('chat', {
     gameId,
     senderId: revenant._id,
     senderName: 'System',
-    content: '👻 The Revenant has used its ability.',
+    content: msg,
     channel: 'global',
     timestamp: Date.now(),
   })
 
   // If the Revenant absorbed a wolf role, notify wolf chat
   if (newTeam === 'bad') {
+    const wolfMsg = game.mode === 'chaos'
+      ? getChaosMessage('revenantJoinWolfChat', { name: revenant.name })
+      : `👻 ${revenant.name} has risen from the shadows and joined the wolf pack as a ${absorbedRole === 'kittenWolf' ? 'Kitten Wolf' : absorbedRole === 'shadowWolf' ? 'Shadow Wolf' : 'Werewolf'}.`
+
     await ctx.db.insert('chat', {
       gameId,
       senderId: revenant._id,
       senderName: 'System',
-      content: `👻 ${revenant.name} has risen from the shadows and joined the wolf pack as a ${absorbedRole === 'kittenWolf' ? 'Kitten Wolf' : absorbedRole === 'shadowWolf' ? 'Shadow Wolf' : 'Werewolf'}.`,
+      content: wolfMsg,
       channel: 'wolves',
       timestamp: Date.now(),
     })
@@ -802,17 +919,22 @@ async function resolveVoting(
   ctx: { db: any },
   gameId: Id<'games'>,
   players: any[],
-  actions: any[]
+  actions: any[],
+  game: any
 ): Promise<VoteResult> {
   const result: VoteResult = { eliminatedPlayer: null, isHunter: false }
   const votes = actions.filter((a: any) => a.type === 'vote' && a.phase === 'voting')
 
   if (votes.length === 0) {
+    const msg = game.mode === 'chaos'
+      ? getChaosMessage('noMajority') // Using 'noMajority' pool for no votes too as it fits
+      : 'No votes were cast. No one was eliminated.'
+
     await ctx.db.insert('chat', {
       gameId,
       senderId: players[0]._id,
       senderName: 'System',
-      content: 'No votes were cast. No one was eliminated.',
+      content: msg,
       channel: 'global',
       timestamp: Date.now(),
     })
@@ -847,21 +969,29 @@ async function resolveVoting(
       result.isHunter = true
     }
 
+    const msg = game.mode === 'chaos'
+      ? getChaosMessage('votingEliminated', { victim: eliminated?.name || 'Someone' })
+      : `The village has spoken! ${eliminated?.name || 'Someone'} has been eliminated.`
+
     await ctx.db.insert('chat', {
       gameId,
       senderId: players[0]._id,
       senderName: 'System',
-      content: `The village has spoken! ${eliminated?.name || 'Someone'} has been eliminated.`,
+      content: msg,
       channel: 'global',
       timestamp: Date.now(),
     })
     return result
   } else {
+    const msg = game.mode === 'chaos'
+      ? getChaosMessage('noMajority')
+      : 'No majority was reached. No one was eliminated.'
+
     await ctx.db.insert('chat', {
       gameId,
       senderId: players[0]._id,
       senderName: 'System',
-      content: 'No majority was reached. No one was eliminated.',
+      content: msg,
       channel: 'global',
       timestamp: Date.now(),
     })

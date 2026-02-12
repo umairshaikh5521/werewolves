@@ -7,7 +7,7 @@ import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { RoomCodeDisplay } from '@/components/game/RoomCodeDisplay'
 import { PlayerAvatar } from '@/components/game/PlayerAvatar'
 import { CountdownOverlay } from '@/components/game/CountdownOverlay'
-import { ArrowLeft, Users, X, Check } from 'lucide-react'
+import { ArrowLeft, Users, X, Check, Sparkles } from 'lucide-react'
 import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/game/lobby/$roomCode')({
@@ -219,6 +219,13 @@ function LobbyScreen() {
 
       <div className="mt-6 flex flex-col items-center gap-6">
         <RoomCodeDisplay code={roomCode.toUpperCase()} />
+
+        {game?.mode === 'chaos' && (
+          <div className="flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 animate-pulse">
+            <Sparkles className="h-3 w-3 text-destructive" />
+            <span className="text-xs font-bold text-destructive">CHAOS MODE ACTIVE</span>
+          </div>
+        )}
 
         <div className="w-full max-w-sm">
           <div className="grid grid-cols-4 gap-3">

@@ -5,7 +5,9 @@ import { api } from '../../convex/_generated/api'
 import { getGuestId, getGuestName, hasGuestName } from '@/lib/guest-identity'
 import { NamePromptDialog } from '@/components/game/NamePromptDialog'
 import { Input } from '@/components/ui/input'
-import { Pencil, BookOpen } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Pencil, BookOpen, Sparkles } from 'lucide-react'
 
 export const Route = createFileRoute('/game/')({ component: GameHome })
 
@@ -19,6 +21,7 @@ function GameHome() {
   const [joinCode, setJoinCode] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining] = useState(false)
+  const [isChaosMode, setIsChaosMode] = useState(false)
   const [error, setError] = useState('')
   const [pendingAction, setPendingAction] = useState<'create' | 'join' | null>(null)
 
@@ -57,6 +60,7 @@ function GameHome() {
       const result = await createGame({
         hostUserId: getGuestId(),
         hostName: playerName,
+        mode: isChaosMode ? 'chaos' : undefined,
       })
       navigate({ to: '/game/lobby/$roomCode', params: { roomCode: result.roomCode } })
     } catch (e: any) {
@@ -96,7 +100,7 @@ function GameHome() {
   }
 
   return (
-    <div className="stars-bg flex min-h-[100dvh] flex-col items-center justify-center px-5 py-8">
+    <div className="stars-bg flex min-h-dvh flex-col items-center justify-center px-5 py-8">
       <NamePromptDialog open={needsName} onComplete={handleNameComplete} />
 
       <div className="flex w-full max-w-sm flex-col items-center gap-8">
@@ -140,6 +144,22 @@ function GameHome() {
           >
             {isCreating ? 'Creating...' : 'Create Game'}
           </button>
+
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-destructive" />
+              <div className="flex flex-col">
+                <Label htmlFor="chaos-mode" className="font-display font-bold text-destructive">Chaos Mode</Label>
+                <span className="text-[10px] text-muted-foreground">Funny Indian names for everyone</span>
+              </div>
+            </div>
+            <Switch
+              id="chaos-mode"
+              checked={isChaosMode}
+              onCheckedChange={setIsChaosMode}
+              className="data-[state=checked]:bg-destructive"
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-border" />
