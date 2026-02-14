@@ -12,6 +12,8 @@ export const submitAction = mutation({
       v.literal('vote'),
       v.literal('kill'),
       v.literal('save'),
+      v.literal('heal'),
+      v.literal('poison'),
       v.literal('scan')
     ),
   },
@@ -60,7 +62,7 @@ export const submitAction = mutation({
         await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, existingAction)
       }
 
-      if (game.phase === 'night' && ['kill', 'save', 'scan'].includes(args.type)) {
+      if (game.phase === 'night' && ['kill', 'save', 'heal', 'poison', 'scan'].includes(args.type)) {
         await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, existingAction)
       }
 
@@ -90,7 +92,7 @@ export const submitAction = mutation({
       await checkAndTriggerEarlyVotingEnd(ctx, args.gameId, game, allActions)
     }
 
-    if (game.phase === 'night' && ['kill', 'save', 'scan'].includes(args.type)) {
+    if (game.phase === 'night' && ['kill', 'save', 'heal', 'poison', 'scan'].includes(args.type)) {
       await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, allActions)
     }
 
@@ -129,7 +131,7 @@ async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, ac
   // Determine which players need to act at night
   const nightActors = alivePlayers.filter((p: any) => {
     const role = p.role
-    if (role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf' || role === 'seer' || role === 'doctor' || role === 'detective') return true
+    if (role === 'wolf' || role === 'kittenWolf' || role === 'shadowWolf' || role === 'seer' || role === 'doctor' || role === 'witch' || role === 'detective') return true
     // Revenant is a night actor from turn 2 onward (turn 1 is Night 2)
     if (role === 'revenant' && game.turnNumber >= 1) return true
     return false
@@ -137,7 +139,7 @@ async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, ac
 
   // Check if each night actor has submitted an action
   // Shadow Wolf needs BOTH a kill vote AND a mute (or skipMute) action
-  const nightActionTypes = ['kill', 'save', 'scan', 'investigate', 'convert', 'mute', 'skipMute', 'absorb']
+  const nightActionTypes = ['kill', 'save', 'heal', 'poison', 'scan', 'investigate', 'convert', 'mute', 'skipMute', 'absorb']
   const nightActions = actions.filter((a: any) => nightActionTypes.includes(a.type) && a.phase === 'night')
 
   const allActed = nightActors.every((p: any) => {
@@ -147,6 +149,10 @@ async function checkAndTriggerEarlyNightEnd(ctx: any, gameId: any, game: any, ac
       const hasKill = playerActions.some((a: any) => a.type === 'kill')
       const hasMuteAction = playerActions.some((a: any) => a.type === 'mute' || a.type === 'skipMute')
       return hasKill && hasMuteAction
+    }
+    // Witch is optional - they don't NEED to act (can save potions)
+    if (p.role === 'witch') {
+      return true // Witch is always "done" (can choose to not act)
     }
     return playerActions.length > 0
   })
@@ -865,3 +871,189 @@ export const getDeadPlayers = query({
       }))
   },
 })
+
+// ======= WITCH ACTIONS =======
+
+// Witch heal potion - save wolf target
+export const useHealPotion = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only heal at night')
+
+    const witch = await ctx.db.get(args.playerId)
+    if (!witch || !witch.isAlive) throw new Error('Player is not alive')
+    if (witch.role !== 'witch') throw new Error('Only Witch can heal')
+    if (witch.roleData?.healPotionUsed) throw new Error('Heal potion already used')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target || !target.isAlive) throw new Error('Target is not alive')
+
+    // Check if Witch already used poison this night
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const usedPoisonThisNight = existingActions.some(
+      (a) => a.actorId === args.playerId && a.type === 'poison'
+    )
+    if (usedPoisonThisNight) throw new Error('Cannot use both potions in the same night')
+
+    // Check if heal action already exists (changing target)
+    const existing = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'heal'
+    )
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { targetId: args.targetId })
+      return existing._id
+    }
+
+    // Insert heal action
+    const actionId = await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'heal',
+      actorId: args.playerId,
+      targetId: args.targetId,
+    })
+
+    // Check for early night end
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return actionId
+  },
+})
+
+// Witch poison potion - kill any player
+export const usePoisonPotion = mutation({
+  args: {
+    gameId: v.id('games'),
+    playerId: v.id('players'),
+    targetId: v.id('players'),
+  },
+  handler: async (ctx, args) => {
+    const game = await ctx.db.get(args.gameId)
+    if (!game || game.status !== 'active') throw new Error('Game not active')
+    if (game.phase !== 'night') throw new Error('Can only poison at night')
+
+    const witch = await ctx.db.get(args.playerId)
+    if (!witch || !witch.isAlive) throw new Error('Player is not alive')
+    if (witch.role !== 'witch') throw new Error('Only Witch can poison')
+    if (witch.roleData?.poisonPotionUsed) throw new Error('Poison potion already used')
+
+    const target = await ctx.db.get(args.targetId)
+    if (!target || !target.isAlive) throw new Error('Target is not alive')
+    if (args.targetId === args.playerId) throw new Error('Cannot poison yourself')
+
+    // Check if Witch already used heal this night
+    const existingActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+
+    const usedHealThisNight = existingActions.some(
+      (a) => a.actorId === args.playerId && a.type === 'heal'
+    )
+    if (usedHealThisNight) throw new Error('Cannot use both potions in the same night')
+
+    // Check if poison action already exists (changing target)
+    const existing = existingActions.find(
+      (a) => a.actorId === args.playerId && a.type === 'poison'
+    )
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { targetId: args.targetId })
+      return existing._id
+    }
+
+    // Insert poison action
+    const actionId = await ctx.db.insert('actions', {
+      gameId: args.gameId,
+      turnNumber: game.turnNumber,
+      phase: game.phase,
+      type: 'poison',
+      actorId: args.playerId,
+      targetId: args.targetId,
+    })
+
+    // Check for early night end
+    const updatedActions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', game.turnNumber)
+      )
+      .collect()
+    await checkAndTriggerEarlyNightEnd(ctx, args.gameId, game, updatedActions)
+
+    return actionId
+  },
+})
+
+// Query to get current wolf target (for Witch to see in real-time)
+export const getWolfTarget = query({
+  args: { gameId: v.id('games'), turnNumber: v.number() },
+  handler: async (ctx, args) => {
+    const actions = await ctx.db
+      .query('actions')
+      .withIndex('by_game_turn', (q) =>
+        q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber)
+      )
+      .collect()
+
+    const killVotes = actions.filter((a) => a.type === 'kill')
+    if (killVotes.length === 0) return null
+
+    // Calculate majority target
+    const voteCounts = new Map<string, number>()
+    for (const vote of killVotes) {
+      const targetKey = vote.targetId.toString()
+      voteCounts.set(targetKey, (voteCounts.get(targetKey) || 0) + 1)
+    }
+
+    let maxVotes = 0
+    let targetIdStr: string | null = null
+    for (const [id, count] of voteCounts.entries()) {
+      if (count > maxVotes) {
+        maxVotes = count
+        targetIdStr = id
+      }
+    }
+
+    if (!targetIdStr) return null
+
+    // Fetch the player using the ID
+    const players = await ctx.db
+      .query('players')
+      .withIndex('by_game', (q) => q.eq('gameId', args.gameId))
+      .collect()
+
+    const target = players.find((p) => p._id.toString() === targetIdStr)
+    if (!target) return null
+
+    return {
+      targetId: target._id,
+      targetName: target.name,
+      voteCount: maxVotes,
+      totalWolves: killVotes.length, // How many wolves have voted
+    }
+  },
+})
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { Crosshair, Eye, ShieldPlus, Vote, Moon, Search, Target } from 'lucide-react'
+import { Crosshair, Eye, ShieldPlus, Vote, Moon, Search, Target, Skull, Sparkles } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +41,12 @@ interface ActionPanelProps {
   deadPlayers?: Array<{ _id: string; name: string; role?: string }>
   onAbsorb?: (targetId: any) => void
   turnNumber?: number
+  // Witch props
+  wolfTarget?: { targetId: any; targetName: string; voteCount: number; totalWolves: number } | null
+  healPotionUsed?: boolean
+  poisonPotionUsed?: boolean
+  onHealPotion?: (targetId: any) => void
+  onPoisonPotion?: (targetId: any) => void
 }
 
 export function ActionPanel({
@@ -48,6 +54,7 @@ export function ActionPanel({
   phase,
   isAlive,
   selectedPlayerName,
+  selectedPlayerId,
   onAction,
   hasActed,
   seerResult,
@@ -68,12 +75,22 @@ export function ActionPanel({
   deadPlayers,
   onAbsorb,
   turnNumber,
+  // Witch props
+  wolfTarget,
+  healPotionUsed,
+  poisonPotionUsed,
+  onHealPotion,
+  onPoisonPotion,
 }: ActionPanelProps) {
   const [showBiteConfirm, setShowBiteConfirm] = useState(false)
   const [hasMuted, setHasMuted] = useState(false)
+  const [usedActionThisNight, setUsedActionThisNight] = useState(false)
 
   // Reset mute state when phase changes (new night)
   useEffect(() => { setHasMuted(false) }, [phase])
+
+  // Reset witch action state when phase changes (new night)
+  useEffect(() => { setUsedActionThisNight(false) }, [phase])
 
   // Hunter Revenge phase — only the dying Hunter acts
   if (phase === 'hunter_revenge') {
@@ -361,6 +378,127 @@ export function ActionPanel({
           hasActed={hasActed}
           actedMessage="Protection set"
         />
+      )
+    }
+
+    if (role === 'witch') {
+      const canUseHeal = !healPotionUsed && !usedActionThisNight
+      const canUsePoison = !poisonPotionUsed && !usedActionThisNight
+      const bothPotionsUsed = healPotionUsed && poisonPotionUsed
+
+      return (
+        <div className="flex flex-col gap-3 px-4 py-3">
+          <div className="flex items-center gap-2 text-purple-400">
+            <Sparkles className="h-4 w-4" />
+            <span className="font-display text-xs font-semibold">Witch</span>
+            <span className="text-[10px] text-muted-foreground">
+              {bothPotionsUsed ? 'All potions used' : 'Choose wisely...'}
+            </span>
+          </div>
+
+          {/* Wolf Target Info - Only show if heal potion is available */}
+          {!healPotionUsed && (
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+              <div className="text-xs font-semibold text-purple-400 mb-1">
+                🎯 Wolf Target:
+              </div>
+              {!wolfTarget || wolfTarget.voteCount === 0 ? (
+                <div className="text-xs text-muted-foreground">
+                  Wolves haven't voted yet...
+                </div>
+              ) : wolfTarget.voteCount === 1 ? (
+                <div className="text-xs text-amber-400">
+                  Likely: <strong>{wolfTarget.targetName}</strong> ({wolfTarget.voteCount} vote)
+                  <div className="text-[10px] text-muted-foreground mt-0.5">Not confirmed</div>
+                </div>
+              ) : (
+                <div className="text-xs text-purple-300">
+                  <strong>{wolfTarget.targetName}</strong> ({wolfTarget.voteCount} votes) ✓
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Heal Potion */}
+          {!healPotionUsed && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-green-400" />
+                <span className="text-xs font-semibold text-green-400">Heal Potion Available</span>
+              </div>
+              {wolfTarget && wolfTarget.targetId && canUseHeal ? (
+                <button
+                  onClick={() => {
+                    onHealPotion?.(wolfTarget.targetId)
+                    setUsedActionThisNight(true)
+                  }}
+                  className={cn(
+                    'game-btn w-full py-2 text-xs font-semibold',
+                    'bg-green-500 hover:bg-green-500/90 text-white'
+                  )}
+                >
+                  🩹 Save {wolfTarget.targetName}
+                </button>
+              ) : !wolfTarget ? (
+                <div className="text-[10px] text-muted-foreground italic px-2">
+                  Waiting for wolves to vote...
+                </div>
+              ) : usedActionThisNight ? (
+                <div className="text-[10px] text-amber-400 italic px-2">
+                  Already used poison this night
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {/* Poison Potion */}
+          {!poisonPotionUsed && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Skull className="h-3.5 w-3.5 text-red-400" />
+                <span className="text-xs font-semibold text-red-400">Poison Potion Available</span>
+              </div>
+              {selectedPlayerName && canUsePoison ? (
+                <button
+                  onClick={() => {
+                    if (selectedPlayerId) {
+                      onPoisonPotion?.(selectedPlayerId)
+                      setUsedActionThisNight(true)
+                    }
+                  }}
+                  className={cn(
+                    'game-btn w-full py-2 text-xs font-semibold',
+                    'bg-red-500 hover:bg-red-500/90 text-white'
+                  )}
+                >
+                  ☠️ Poison {selectedPlayerName}
+                </button>
+              ) : !selectedPlayerName ? (
+                <div className="text-[10px] text-muted-foreground italic px-2">
+                  Select a player to poison...
+                </div>
+              ) : usedActionThisNight ? (
+                <div className="text-[10px] text-amber-400 italic px-2">
+                  Already used heal this night
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {/* Action submitted indicator */}
+          {usedActionThisNight && (
+            <div className="animate-bounce-in rounded-lg bg-purple-500/20 px-3 py-1.5 text-xs font-semibold text-purple-300">
+              ✓ Potion used (can only use one per night)
+            </div>
+          )}
+
+          {/* Both potions used permanently */}
+          {bothPotionsUsed && (
+            <div className="rounded-lg bg-gray-500/20 px-3 py-2 text-xs text-gray-400">
+              Both potions used. You are now a Villager.
+            </div>
+          )}
+        </div>
       )
     }
 

@@ -74,6 +74,17 @@ export const roleConfig: Record<string, RoleInfo> = {
     team: 'village',
     ability: 'Each night, choose one player to protect. If the wolves target that player, they will survive. You cannot protect the same player two nights in a row. You may protect yourself.',
   },
+  witch: {
+    color: 'text-purple-400',
+    bg: 'bg-purple-400/10',
+    border: 'border-purple-400/30',
+    title: 'Witch',
+    description: 'Wield two powerful potions: one to save a life, one to take it. Choose wisely.',
+    btnColor: 'bg-purple-500 hover:bg-purple-500/90',
+    image: '/witch.webp',
+    team: 'village',
+    ability: 'You have 2 one-time potions: a Heal Potion to save the wolf kill target, and a Poison Potion to kill any player at night. Each night, you learn who the wolves targeted. You can use both potions in the same game, but only one per night. Use them wisely - the Heal can save a key role, but the Poison could backfire if you target the wrong player.',
+  },
   gunner: {
     color: 'text-moon-gold',
     bg: 'bg-moon-gold/10',

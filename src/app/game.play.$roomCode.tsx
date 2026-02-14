@@ -90,11 +90,22 @@ function GamePlayScreen() {
       ? { gameId: game._id, playerId: myPlayer._id, turnNumber: game.turnNumber }
       : 'skip'
   )
+  // Witch: Get current wolf target (real-time)
+  const wolfTarget = useQuery(
+    api.gameActions.getWolfTarget,
+    game && myPlayer && myPlayer.role === 'witch' && game.phase === 'night'
+      ? { gameId: game._id, turnNumber: game.turnNumber }
+      : 'skip'
+  )
   // Subscribe to shoot count for all players to hear gunshot
   const shootCount = useQuery(
     api.gameActions.getShootCount,
     game ? { gameId: game._id } : 'skip'
   )
+
+  // Witch mutations
+  const useHealPotionMutation = useMutation(api.gameActions.useHealPotion)
+  const usePoisonPotionMutation = useMutation(api.gameActions.usePoisonPotion)
 
   const [selectedPlayerId, setSelectedPlayerId] = useState<Id<'players'> | null>(null)
   const [selectedPlayerId2, setSelectedPlayerId2] = useState<Id<'players'> | null>(null)
@@ -412,6 +423,38 @@ function GamePlayScreen() {
     }
   }, [game, myPlayer, absorbRoleFn])
 
+  // Witch heal potion handler
+  const handleHealPotion = useCallback(async (targetId: Id<'players'>) => {
+    if (!game || !myPlayer) return
+    if (myPlayer.role !== 'witch') return
+    try {
+      await useHealPotionMutation({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId,
+      })
+      setHasActed(true)
+    } catch {
+      // heal failed
+    }
+  }, [game, myPlayer, useHealPotionMutation])
+
+  // Witch poison potion handler
+  const handlePoisonPotion = useCallback(async (targetId: Id<'players'>) => {
+    if (!game || !myPlayer) return
+    if (myPlayer.role !== 'witch') return
+    try {
+      await usePoisonPotionMutation({
+        gameId: game._id,
+        playerId: myPlayer._id,
+        targetId,
+      })
+      setHasActed(true)
+    } catch {
+      // poison failed
+    }
+  }, [game, myPlayer, usePoisonPotionMutation])
+
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!game || !myPlayer) return
@@ -688,6 +731,12 @@ function GamePlayScreen() {
             deadPlayers={deadPlayers || undefined}
             onAbsorb={handleAbsorb}
             turnNumber={game.turnNumber}
+            // Witch props
+            wolfTarget={wolfTarget || undefined}
+            healPotionUsed={myPlayer.roleData?.healPotionUsed}
+            poisonPotionUsed={myPlayer.roleData?.poisonPotionUsed}
+            onHealPotion={handleHealPotion}
+            onPoisonPotion={handlePoisonPotion}
           />
         </div>
 

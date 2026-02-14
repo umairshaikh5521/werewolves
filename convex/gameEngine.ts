@@ -3,7 +3,7 @@ import { mutation, internalMutation } from './_generated/server'
 import { internal } from './_generated/api'
 import type { Id } from './_generated/dataModel'
 
-type GameRole = 'wolf' | 'kittenWolf' | 'shadowWolf' | 'seer' | 'doctor' | 'gunner' | 'detective' | 'hunter' | 'revenant' | 'villager'
+type GameRole = 'wolf' | 'kittenWolf' | 'shadowWolf' | 'seer' | 'doctor' | 'witch' | 'gunner' | 'detective' | 'hunter' | 'revenant' | 'villager'
 type Team = 'good' | 'bad' | 'neutral'
 
 interface RoleDist {
@@ -12,6 +12,7 @@ interface RoleDist {
   shadowWolf: number
   seer: number
   doctor: number
+  witch: number
   gunner: number
   detective: number
   hunter: number
@@ -20,14 +21,14 @@ interface RoleDist {
 }
 
 const ROLE_DISTRIBUTION: Record<number, RoleDist> = {
-  5: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
-  6: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
-  7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 0, villagers: 1 },
-  8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 0 },
-  9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 1, villagers: 2 },
-  10: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 2 },
-  11: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 3 },
-  12: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 4 },
+  5: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 0, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  6: { wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  7: { wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 1, revenant: 0, villagers: 1 },
+  8: { wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 0 },
+  9: { wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 1, revenant: 1, villagers: 2 },
+  10: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 2 },
+  11: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 3 },
+  12: { wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 4 },
 }
 
 // Dynamic durations based on player count
@@ -102,6 +103,9 @@ function buildRoleList(dist: RoleDist, expectedCount: number): Array<{ role: Gam
   for (let i = 0; i < dist.doctor; i++) {
     roles.push({ role: 'doctor', team: 'good' })
   }
+  for (let i = 0; i < dist.witch; i++) {
+    roles.push({ role: 'witch', team: 'good' })
+  }
   for (let i = 0; i < dist.gunner; i++) {
     roles.push({ role: 'gunner', team: 'good' })
   }
@@ -131,6 +135,9 @@ function buildRoleData(role: GameRole) {
   }
   if (role === 'doctor') {
     return {}
+  }
+  if (role === 'witch') {
+    return { healPotionUsed: false, poisonPotionUsed: false }
   }
   if (role === 'kittenWolf') {
     return { hasBitten: false }
@@ -483,37 +490,48 @@ export const transitionPhase = internalMutation({
         : 0
 
       if (Math.random() < glitchChance) {
-        // Exclude revealed players (e.g. Gunner who shot)
+        // Exclude revealed players (e.g. Gunner who shot) AND dead players
         const candidates = updatedPlayers.filter((p: any) => p.isAlive && !p.roleData?.isRevealed)
 
         if (candidates.length > 0) {
           const randomPlayer = candidates[Math.floor(Math.random() * candidates.length)]
 
-          // Get unique roles present in the current game
-          const presentRoles = Array.from(new Set(updatedPlayers.map((p: any) => p.role)))
-          const randomRole = presentRoles[Math.floor(Math.random() * presentRoles.length)]
+          // Get unique roles ONLY from alive, non-revealed players
+          // This ensures we don't leak roles that are no longer in play or already revealed
+          const eligibleRoles = candidates
+            .map((p: any) => p.role)
+            .filter((role): role is string => role !== undefined && role !== null)
 
-          // Format role name
-          const formatRole = (r: string) => {
-            if (r === 'kittenWolf') return 'Kitten Wolf'
-            if (r === 'shadowWolf') return 'Shadow Wolf'
-            return r.charAt(0).toUpperCase() + r.slice(1)
+          const presentRoles = Array.from(new Set(eligibleRoles))
+
+          // Safety check: ensure we have roles to choose from
+          if (presentRoles.length === 0) {
+            console.warn('[Glitch] No eligible roles found for glitch message')
+          } else {
+            const randomRole = presentRoles[Math.floor(Math.random() * presentRoles.length)]
+
+            // Format role name
+            const formatRole = (r: string) => {
+              if (r === 'kittenWolf') return 'Kitten Wolf'
+              if (r === 'shadowWolf') return 'Shadow Wolf'
+              return r.charAt(0).toUpperCase() + r.slice(1)
+            }
+
+            patchData.chaosRevealUsed = true
+
+            const glitchMsg = game.mode === 'chaos'
+              ? `⚠️ MOONRISE AI: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${formatRole(randomRole)} hai... shayad...`
+              : `⚠️ MOONRISE AI: Role Leaked ${randomPlayer.name} is a  ${formatRole(randomRole)}, probably.`
+
+            await ctx.db.insert('chat', {
+              gameId: args.gameId,
+              senderId: players[0]._id,
+              senderName: 'System',
+              content: glitchMsg,
+              channel: 'global',
+              timestamp: Date.now(),
+            })
           }
-
-          patchData.chaosRevealUsed = true
-
-          const glitchMsg = game.mode === 'chaos'
-            ? `⚠️ MOONRISE AI: ${randomPlayer.name} ka role leak ho gaya! Wo pakka ${formatRole(randomRole)} hai... shayad...`
-            : `⚠️ MOONRISE AI: Role Leaked ${randomPlayer.name} is a  ${formatRole(randomRole)}, probably.`
-
-          await ctx.db.insert('chat', {
-            gameId: args.gameId,
-            senderId: players[0]._id,
-            senderName: 'System',
-            content: glitchMsg,
-            channel: 'global',
-            timestamp: Date.now(),
-          })
         }
       }
 
@@ -846,7 +864,7 @@ async function resolveNight(
     }
   }
 
-  // 4. Process wolf kill votes
+  // 4. Process wolf kill votes & Witch heal
   const killVotes = actions.filter((a: any) => a.type === 'kill')
   if (killVotes.length > 0) {
     const voteCounts: Map<string, number> = new Map()
@@ -865,7 +883,12 @@ async function resolveNight(
     }
 
     if (targetId) {
-      const wasSaved = saveActions.some((a: any) => a.targetId === targetId)
+      // Check for both Doctor save AND Witch heal
+      const wasSavedByDoctor = saveActions.some((a: any) => a.targetId === targetId)
+      const healActions = actions.filter((a: any) => a.type === 'heal')
+      const wasSavedByWitch = healActions.some((a: any) => a.targetId === targetId)
+      const wasSaved = wasSavedByDoctor || wasSavedByWitch
+
       if (!wasSaved) {
         const victim = players.find((p: any) => p._id === targetId)
         await ctx.db.patch(targetId, { isAlive: false })
@@ -888,14 +911,52 @@ async function resolveNight(
           channel: 'global',
           timestamp: Date.now(),
         })
-        // Process Revenant absorption after kill
-        await processRevenantAbsorption(ctx, gameId, players, actions, game)
-        return result
+      } else {
+        // If Witch used heal, mark it as used
+        if (wasSavedByWitch) {
+          const witch = players.find((p: any) => p.role === 'witch' && p.isAlive)
+          if (witch) {
+            await ctx.db.patch(witch._id, {
+              roleData: {
+                ...witch.roleData,
+                healPotionUsed: true,
+              },
+            })
+          }
+        }
+
+        const msg = game.mode === 'chaos'
+          ? getChaosMessage('nightSurvival', { target: "Someone" })
+          : 'Someone was attacked but survived the night!'
+
+        await ctx.db.insert('chat', {
+          gameId,
+          senderId: players[0]._id,
+          senderName: 'System',
+          content: msg,
+          channel: 'global',
+          timestamp: Date.now(),
+        })
+      }
+    }
+  }
+
+  // 5. Process Witch poison (separate from wolf kill)
+  const poisonAction = actions.find((a: any) => a.type === 'poison')
+  if (poisonAction) {
+    const poisonTarget = players.find((p: any) => p._id === poisonAction.targetId)
+    if (poisonTarget && poisonTarget.isAlive) {
+      await ctx.db.patch(poisonAction.targetId, { isAlive: false })
+
+      // Check if poisoned player is Hunter
+      if (poisonTarget.role === 'hunter') {
+        result.hunterDied = true
+        result.hunterPlayerId = poisonAction.targetId
       }
 
       const msg = game.mode === 'chaos'
-        ? getChaosMessage('nightSurvival', { target: "Someone" })
-        : 'Someone was attacked but survived the night!'
+        ? `☠️ ${poisonTarget.name} ko kisine poison kar diya!`
+        : `☠️ ${poisonTarget.name} was poisoned by mysterious forces.`
 
       await ctx.db.insert('chat', {
         gameId,
@@ -905,11 +966,23 @@ async function resolveNight(
         channel: 'global',
         timestamp: Date.now(),
       })
-      // Process Revenant absorption even when target was saved
-      await processRevenantAbsorption(ctx, gameId, players, actions, game)
-      return result
+
+      // Mark poison as used
+      const witch = players.find((p: any) => p.role === 'witch' && p.isAlive)
+      if (witch) {
+        await ctx.db.patch(witch._id, {
+          roleData: {
+            ...witch.roleData,
+            poisonPotionUsed: true,
+          },
+        })
+      }
     }
   }
+
+  // Process Revenant absorption
+  await processRevenantAbsorption(ctx, gameId, players, actions, game)
+  return result
 
   const msg = game.mode === 'chaos'
     ? getChaosMessage('noKill')
