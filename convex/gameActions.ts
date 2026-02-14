@@ -550,9 +550,25 @@ export const getSeerResult = query({
       )
       .collect()
 
-    const scanAction = actions.find(
+    // First, try to find a scan from the current turn
+    let scanAction = actions.find(
       (a) => a.actorId === args.playerId && a.type === 'scan'
     )
+
+    // If no scan found on current turn, check previous turn (for day/voting phase viewing)
+    if (!scanAction && args.turnNumber > 0) {
+      const prevActions = await ctx.db
+        .query('actions')
+        .withIndex('by_game_turn', (q) =>
+          q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber - 1)
+        )
+        .collect()
+
+      scanAction = prevActions.find(
+        (a) => a.actorId === args.playerId && a.type === 'scan'
+      )
+    }
+
     if (!scanAction) return null
 
     const target = await ctx.db.get(scanAction.targetId)
@@ -586,9 +602,25 @@ export const getDetectiveResult = query({
       )
       .collect()
 
-    const action = actions.find(
+    // First, try to find an investigation from the current turn
+    let action = actions.find(
       (a) => a.actorId === args.playerId && a.type === 'investigate'
     )
+
+    // If no investigation found on current turn, check previous turn (for day/voting phase viewing)
+    if (!action && args.turnNumber > 0) {
+      const prevActions = await ctx.db
+        .query('actions')
+        .withIndex('by_game_turn', (q) =>
+          q.eq('gameId', args.gameId).eq('turnNumber', args.turnNumber - 1)
+        )
+        .collect()
+
+      action = prevActions.find(
+        (a) => a.actorId === args.playerId && a.type === 'investigate'
+      )
+    }
+
     if (!action || !action.targetId2) return null
 
     const p1 = await ctx.db.get(action.targetId)
