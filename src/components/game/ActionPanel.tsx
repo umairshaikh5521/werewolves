@@ -406,6 +406,11 @@ export function ActionPanel({
                 <div className="text-xs text-muted-foreground">
                   Wolves haven't voted yet...
                 </div>
+              ) : (wolfTarget as any).isTie ? (
+                <div className="text-xs text-amber-400">
+                  Multiple targets ({(wolfTarget as any).tiedTargetCount} tied with {wolfTarget.voteCount} vote{wolfTarget.voteCount !== 1 ? 's' : ''} each)
+                  <div className="text-[10px] text-muted-foreground mt-0.5">No majority - cannot heal yet</div>
+                </div>
               ) : wolfTarget.voteCount === 1 ? (
                 <div className="text-xs text-amber-400">
                   Likely: <strong>{wolfTarget.targetName}</strong> ({wolfTarget.voteCount} vote)
@@ -426,7 +431,7 @@ export function ActionPanel({
                 <Sparkles className="h-3.5 w-3.5 text-green-400" />
                 <span className="text-xs font-semibold text-green-400">Heal Potion Available</span>
               </div>
-              {wolfTarget && wolfTarget.targetId && canUseHeal ? (
+              {wolfTarget && wolfTarget.targetId && !(wolfTarget as any).isTie && canUseHeal ? (
                 <button
                   onClick={() => {
                     onHealPotion?.(wolfTarget.targetId)
@@ -439,6 +444,10 @@ export function ActionPanel({
                 >
                   🩹 Save {wolfTarget.targetName}
                 </button>
+              ) : (wolfTarget as any)?.isTie ? (
+                <div className="text-[10px] text-amber-400 italic px-2">
+                  Wolves are tied - wait for majority
+                </div>
               ) : !wolfTarget ? (
                 <div className="text-[10px] text-muted-foreground italic px-2">
                   Waiting for wolves to vote...

@@ -1030,10 +1030,27 @@ export const getWolfTarget = query({
 
     let maxVotes = 0
     let targetIdStr: string | null = null
+    let tiedCount = 0
+
     for (const [id, count] of voteCounts.entries()) {
       if (count > maxVotes) {
         maxVotes = count
         targetIdStr = id
+        tiedCount = 1
+      } else if (count === maxVotes) {
+        tiedCount++
+      }
+    }
+
+    // If there's a tie (multiple targets with same max votes), indicate uncertainty
+    if (tiedCount > 1) {
+      return {
+        targetId: null as any,
+        targetName: '',
+        voteCount: maxVotes,
+        totalWolves: killVotes.length,
+        isTie: true,
+        tiedTargetCount: tiedCount,
       }
     }
 

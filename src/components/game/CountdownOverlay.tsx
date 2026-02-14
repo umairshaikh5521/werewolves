@@ -21,9 +21,9 @@ export const ROLE_DISTRIBUTION: Record<number, Record<string, number>> = {
     7: { wolf: 2, seer: 1, doctor: 1, gunner: 1, hunter: 1, villager: 1 },
     8: { wolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1 },
     9: { wolf: 1, kittenWolf: 1, seer: 1, doctor: 1, gunner: 1, hunter: 1, revenant: 1, villager: 2 },
-    10: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 2 },
-    11: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 3 },
-    12: { kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 4 },
+    10: { kittenWolf: 1, shadowWolf: 1, seer: 1, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 2 },
+    11: { kittenWolf: 1, shadowWolf: 1, seer: 1, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 3 },
+    12: { kittenWolf: 1, shadowWolf: 1, seer: 1, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villager: 4 },
 }
 
 export const ROLE_META: Record<string, { emoji: string; color: string; label: string; image?: string }> = {
@@ -32,6 +32,7 @@ export const ROLE_META: Record<string, { emoji: string; color: string; label: st
     shadowWolf: { emoji: '👤', color: 'text-violet-500', label: 'Shadow', image: '/assets/icons/shadow-wolf-icon.webp' },
     seer: { emoji: '🔮', color: 'text-blue-400', label: 'Seer', image: '/assets/icons/seer-icon.webp' },
     doctor: { emoji: '💊', color: 'text-green-400', label: 'Doctor', image: '/assets/icons/doctor-icon.webp' },
+    witch: { emoji: '🧙‍♀️', color: 'text-purple-400', label: 'Witch', image: '/assets/icons/witch-icon.webp' },
     gunner: { emoji: '🔫', color: 'text-yellow-500', label: 'Gunner', image: '/assets/icons/gunner-icon.webp' },
     detective: { emoji: '🕵️', color: 'text-yellow-500', label: 'Detective', image: '/assets/icons/detective-icon.webp' },
     hunter: { emoji: '🏹', color: 'text-orange-500', label: 'Hunter', image: '/assets/icons/hunter-icon.webp' },

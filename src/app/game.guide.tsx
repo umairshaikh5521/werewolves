@@ -5,17 +5,17 @@ import { roleConfig } from '@/lib/role-config'
 
 export const Route = createFileRoute('/game/guide')({ component: GameGuide })
 
-const roleOrder = ['shadowWolf', 'hunter', 'revenant', 'wolf', 'kittenWolf', 'seer', 'doctor', 'gunner', 'detective', 'villager'] as const
+const roleOrder = ['shadowWolf', 'hunter', 'revenant', 'wolf', 'kittenWolf', 'seer', 'doctor', 'witch', 'gunner', 'detective', 'villager'] as const
 
 const roleDistribution = [
-  { players: 5, wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 0, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
-  { players: 6, wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
-  { players: 7, wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 0, villagers: 1 },
-  { players: 8, wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 0 },
-  { players: 9, wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, gunner: 1, detective: 0, hunter: 1, revenant: 1, villagers: 2 },
-  { players: 10, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 2 },
-  { players: 11, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 3 },
-  { players: 12, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 4 },
+  { players: 5, wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 0, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  { players: 6, wolves: 1, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 0, revenant: 0, villagers: 2 },
+  { players: 7, wolves: 2, kittenWolf: 0, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 1, revenant: 0, villagers: 1 },
+  { players: 8, wolves: 1, kittenWolf: 0, shadowWolf: 1, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 0 },
+  { players: 9, wolves: 1, kittenWolf: 1, shadowWolf: 0, seer: 1, doctor: 1, witch: 0, gunner: 1, detective: 0, hunter: 1, revenant: 1, villagers: 2 },
+  { players: 10, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 2 },
+  { players: 11, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 3 },
+  { players: 12, wolves: 0, kittenWolf: 1, shadowWolf: 1, seer: 1, doctor: 0, witch: 1, gunner: 1, detective: 1, hunter: 1, revenant: 1, villagers: 4 },
 ]
 
 function GameGuide() {
@@ -129,6 +129,7 @@ function GameGuide() {
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-violet-500">Shadow</th>
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-seer-blue">Seer</th>
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-doctor-green">Doctor</th>
+                    <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-purple-400">Witch</th>
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Gunner</th>
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-moon-gold">Detective</th>
                     <th className="px-2 py-2.5 text-center font-display text-xs font-bold uppercase tracking-wider text-orange-500">Hunter</th>
@@ -144,7 +145,8 @@ function GameGuide() {
                       <td className="px-2 py-2.5 text-center font-semibold text-amber-500">{row.kittenWolf || '-'}</td>
                       <td className="px-2 py-2.5 text-center font-semibold text-violet-500">{row.shadowWolf || '-'}</td>
                       <td className="px-2 py-2.5 text-center font-semibold text-seer-blue">{row.seer}</td>
-                      <td className="px-2 py-2.5 text-center font-semibold text-doctor-green">{row.doctor}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-doctor-green">{row.doctor || '-'}</td>
+                      <td className="px-2 py-2.5 text-center font-semibold text-purple-400">{row.witch || '-'}</td>
                       <td className="px-2 py-2.5 text-center font-semibold text-moon-gold">{row.gunner || '-'}</td>
                       <td className="px-2 py-2.5 text-center font-semibold text-moon-gold">{row.detective || '-'}</td>
                       <td className="px-2 py-2.5 text-center font-semibold text-orange-500">{row.hunter || '-'}</td>
@@ -180,7 +182,11 @@ function GameGuide() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Doctor</span>
-                    <span className="font-bold text-doctor-green">{row.doctor}</span>
+                    <span className="font-bold text-doctor-green">{row.doctor || '-'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Witch</span>
+                    <span className="font-bold text-purple-400">{row.witch || '-'}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Gunner</span>
