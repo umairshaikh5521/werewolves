@@ -116,10 +116,10 @@ function GameHome() {
           </p>
           <Link
             to="/game/guide"
-            hash="chaos"
-            className="mt-2 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/20 transition-colors animate-pulse"
+            hash="roles"
+            className="mt-2 rounded-full border border-purple-400/30 bg-purple-500/10 px-3 py-1 text-[11px] font-semibold text-purple-400 hover:bg-purple-500/20 transition-colors animate-pulse"
           >
-            🔥 NEW: Chaos Mode is Here!
+            🧙‍♀️ NEW: The Witch is Here!
           </Link>
         </div>
 
